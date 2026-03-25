@@ -1,0 +1,25 @@
+name: charts_generator
+description: A web application for generating customizable charts
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.1.0
+  file_picker: ^6.1.1
+  flutter_colorpicker: ^1.0.3
+  path_provider: ^2.1.1
+  share_plus: ^7.2.1
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

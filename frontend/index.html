@@ -1,0 +1,2675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create and export charts from your data. Upload CSV or Excel, choose from 20+ chart types, and download as PNG, PDF, or HTML.">
+    <meta name="theme-color" content="#0d5c4a">
+    <title>Charts Generator — Create charts from your data</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230d5c4a'><rect x='3' y='14' width='4' height='6'/><rect x='10' y='10' width='4' height='10'/><rect x='17' y='6' width='4' height='14'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        :root {
+            --primary: #0d5c4a;
+            --primary-hover: #0a4a3b;
+            --primary-light: #e8f5f2;
+            --text: #1a1a1a;
+            --text-muted: #5c5c5c;
+            --border: #e0e0e0;
+            --bg: #f8f9fa;
+            --surface: #ffffff;
+            --radius: 10px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #2dd4a0;
+                --primary-hover: #22b88a;
+                --primary-light: rgba(45,212,160,0.15);
+                --text: #e4e4e4;
+                --text-muted: #a0a0a0;
+                --border: #333;
+                --bg: #141414;
+                --surface: #1c1c1c;
+                --shadow: 0 1px 3px rgba(0,0,0,0.3);
+                --shadow-lg: 0 4px 12px rgba(0,0,0,0.4);
+            }
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            font-size: 16px;
+        }
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .logo {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--primary);
+            letter-spacing: -0.02em;
+        }
+        .tagline {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+        .main {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 3rem;
+        }
+        @media (max-width: 600px) {
+            .main { padding: 1.25rem 1rem 2rem; }
+            .card { padding: 1.25rem; }
+            select, button, input[type="file"], .btn-generate { max-width: none; }
+        }
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .form-group:last-child { margin-bottom: 0; }
+        label {
+            display: block;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            font-size: 0.9375rem;
+        }
+        .label-row { display: flex; align-items: center; gap: 0.35rem; }
+        .help {
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            color: var(--surface);
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: help;
+            flex-shrink: 0;
+        }
+        select, button, input[type="file"] {
+            font-family: inherit;
+            font-size: 0.9375rem;
+            padding: 0.625rem 0.875rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 360px;
+            background: var(--surface);
+            color: var(--text);
+        }
+        @media (min-width: 780px) {
+            .panel-left select,
+            .panel-left input[type="file"],
+            .panel-left .drop-zone,
+            .panel-left .chart-type-search,
+            .panel-left .btn-generate {
+                max-width: 100%;
+            }
+        }
+        input[type="file"] {
+            padding: 0.75rem;
+            background: var(--bg);
+            cursor: pointer;
+        }
+        select:focus, button:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background 0.15s, transform 0.05s;
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            margin-top: 0.5rem;
+        }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+        .btn-primary:disabled {
+            background: #b0b0b0;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: var(--border); }
+        .btn-generate {
+            width: 100%;
+            max-width: 360px;
+            padding: 0.875rem 1.5rem;
+            font-size: 1rem;
+        }
+        .status-wrap { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+        #status {
+            flex: 1;
+            min-width: 0;
+            padding: 0.875rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            min-height: 2.5rem;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        #status.success { background: var(--primary-light); color: var(--primary-hover); border-color: rgba(13,92,74,0.2); }
+        #status.error { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+        @media (prefers-color-scheme: dark) {
+            #status.error { background: #3f1f1f; color: #fca5a5; border-color: #7f2d2d; }
+        }
+        #status.pending { background: var(--bg); color: var(--text-muted); }
+        .spinner {
+            width: 18px; height: 18px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+        .status-actions .btn { padding: 0.4rem 0.75rem; font-size: 0.8125rem; }
+        .chart-wrapper {
+            margin-top: 1rem;
+            min-height: 520px;
+            width: 100%;
+            border-radius: var(--radius);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            overflow: visible;
+            position: relative;
+        }
+        #chartDiv {
+            width: 100%;
+            min-height: 500px;
+            overflow: visible;
+        }
+        .item-colors {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+        .item-colors-title { font-size: 0.875rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.75rem; }
+        .item-color-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .item-color-row label { margin: 0; font-weight: 400; flex: 1; min-width: 0; font-size: 0.875rem; }
+        .item-color-row input[type="color"] {
+            width: 32px; height: 32px;
+            padding: 2px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .export-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            align-items: center;
+        }
+        .export-row .btn { margin-top: 0; }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+        .modal-overlay.hidden { display: none; }
+        .modal {
+            background: var(--surface);
+            border-radius: var(--radius);
+            max-width: 560px;
+            width: 100%;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+        }
+        .modal-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 { margin: 0; font-size: 1rem; }
+        .modal-body {
+            padding: 1.25rem;
+            overflow: auto;
+            max-height: 60vh;
+        }
+        .modal-body pre {
+            margin: 0;
+            font-size: 0.8125rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            background: var(--bg);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .footer {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+        }
+        .footer a { color: var(--primary); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+        .color-palette {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .color-palette input[type="color"] {
+            width: 36px;
+            height: 36px;
+            padding: 2px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            background: var(--surface);
+        }
+        .color-palette input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
+        .color-palette input[type="color"]::-webkit-color-swatch { border-radius: 6px; border: none; }
+        .color-reset {
+            font-size: 0.8125rem;
+            color: var(--primary);
+            cursor: pointer;
+            margin-left: 0.25rem;
+        }
+        .color-reset:hover { text-decoration: underline; }
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .preview-header .card-title { margin-bottom: 0; }
+        .var-group { margin-bottom: 1rem; }
+        .var-group:last-child { margin-bottom: 0; }
+        .var-label-row { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+        .var-required { font-size: 0.75rem; color: var(--primary); font-weight: 600; }
+        .var-optional { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+        .var-desc { font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.25rem; margin-bottom: 0.5rem; }
+        .customize-panel {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+        .customize-intro { font-size: 0.875rem; color: var(--text-muted); margin: 0 0 1rem 0; }
+        .customize-grid { display: grid; gap: 1.25rem; margin-bottom: 1.25rem; }
+        .customize-section { padding: 1rem; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); }
+        .customize-section-title { font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 0.75rem; }
+        .customize-row { margin-bottom: 0.75rem; }
+        .customize-row:last-child { margin-bottom: 0; }
+        .customize-row label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.35rem; }
+        .customize-row.inline { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .customize-row.inline label { margin-bottom: 0; flex: 0 0 auto; min-width: 4rem; }
+        .cust-input { width: 100%; max-width: 320px; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.9375rem; }
+        .cust-num { width: 5rem; padding: 0.5rem 0.5rem; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.9375rem; }
+        .cust-color { width: 40px; height: 36px; padding: 2px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; background: var(--surface); }
+        .customize-row.inline .cust-input, .customize-row.inline select, .customize-row.inline .cust-num { flex: 0 1 auto; }
+        .checkbox-label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 400 !important; }
+        .checkbox-label input { width: 18px; height: 18px; }
+        .customize-desc { font-size: 0.8125rem; color: var(--text-muted); margin: 0 0 0.5rem 0; }
+        .item-colors-list { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+        .item-color-row { display: flex; align-items: center; gap: 0.5rem; margin: 0; }
+        .item-color-row label { margin: 0; font-size: 0.8125rem; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .item-color-row input[type="color"] { width: 32px; height: 32px; padding: 2px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
+        .data-preview-section { margin-bottom: 1.25rem; padding: 1rem; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); }
+        .data-preview-hint { font-size: 0.8125rem; color: var(--text-muted); margin: 0 0 0.5rem 0; }
+        .data-preview-table-wrap { overflow-x: auto; max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; }
+        .data-preview-table-wrap table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+        .data-preview-table-wrap th, .data-preview-table-wrap td { padding: 0.4rem 0.6rem; text-align: left; border-bottom: 1px solid var(--border); }
+        .data-preview-table-wrap th { background: var(--surface); font-weight: 600; position: sticky; top: 0; }
+        .data-preview-meta { font-size: 0.75rem; color: var(--text-muted); margin: 0.5rem 0 0 0; }
+        .chart-empty-state { display: flex; align-items: center; justify-content: center; min-height: 280px; padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.9375rem; }
+        .chart-wrapper.has-chart .chart-empty-state { display: none; }
+        .chart-div { min-height: 0; }
+        .chart-wrapper.has-chart .chart-div { min-height: 500px; }
+        .size-presets { margin-top: 0.5rem; }
+        .preset-label { font-size: 0.8125rem; color: var(--text-muted); margin-right: 0.5rem; }
+        .btn-preset { padding: 0.35rem 0.6rem; font-size: 0.8125rem; }
+        /* Drag-and-drop zone */
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: border-color 0.2s, background 0.2s;
+            cursor: pointer;
+            background: var(--bg);
+            max-width: 360px;
+            margin-bottom: 0.75rem;
+        }
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .drop-zone-icon { font-size: 2rem; line-height: 1; margin-bottom: 0.5rem; }
+        .drop-zone-text { font-size: 0.9375rem; font-weight: 500; color: var(--text); margin-bottom: 0.25rem; }
+        .drop-zone-hint { font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+        .drop-zone-filename {
+            margin-top: 0.5rem;
+            font-size: 0.8125rem;
+            color: var(--primary);
+            font-weight: 500;
+            word-break: break-all;
+            min-height: 1.2em;
+        }
+        /* Upload confirmation badge */
+        .upload-confirm {
+            margin-top: 0.5rem;
+            font-size: 0.8125rem;
+            color: var(--primary);
+            display: none;
+        }
+        /* Palette chips */
+        .palette-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
+        .palette-chip {
+            display: flex;
+            gap: 2px;
+            border-radius: 6px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            padding: 2px;
+            transition: border-color 0.15s;
+        }
+        .palette-chip.active { border-color: var(--primary); }
+        .palette-chip span {
+            width: 14px; height: 20px; display: block;
+        }
+        .palette-chip-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; display: block; text-align: center; }
+        /* Sticky generate bar */
+        .sticky-generate {
+            position: sticky;
+            bottom: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            margin: 0 -1.5rem -1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 10;
+            border-radius: 0 0 var(--radius) var(--radius);
+        }
+        @media (max-width: 600px) { .sticky-generate { margin: 0 -1.25rem -1.25rem; padding: 0.75rem 1rem; } }
+        .sticky-generate .btn-generate { max-width: none; flex: 1; }
+        /* Filter rows */
+        .filter-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+        .filter-row select, .filter-row input[type="text"] { flex: 1; min-width: 80px; max-width: none; padding: 0.45rem 0.6rem; font-size: 0.875rem; }
+        .filter-row .btn-remove-filter { padding: 0.3rem 0.55rem; font-size: 0.8125rem; color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
+        .filter-row .btn-remove-filter:hover { background: #fee2e2; }
+        .btn-add-filter { font-size: 0.8125rem; color: var(--primary); background: none; border: 1px dashed var(--primary); border-radius: 6px; padding: 0.35rem 0.75rem; cursor: pointer; margin-top: 0.25rem; }
+        .btn-add-filter:hover { background: var(--primary-light); }
+        /* Inline controls row */
+        .controls-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem; align-items: flex-end; }
+        .controls-row .ctrl-group { display: flex; flex-direction: column; gap: 0.25rem; }
+        .controls-row label { font-size: 0.8125rem; font-weight: 500; }
+        .ctrl-select { padding: 0.45rem 0.6rem; font-size: 0.875rem; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+        .ctrl-num { width: 5rem; padding: 0.45rem 0.5rem; font-size: 0.875rem; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+        /* Chart history */
+        .history-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+        .history-title { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
+        .history-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .history-thumb { width: 80px; cursor: pointer; border-radius: 6px; border: 2px solid var(--border); overflow: hidden; background: var(--bg); transition: border-color 0.15s; flex-shrink: 0; }
+        .history-thumb:hover { border-color: var(--primary); }
+        .history-thumb img { width: 100%; display: block; }
+        .history-thumb-label { font-size: 0.6875rem; text-align: center; padding: 2px 4px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* Stats table */
+        .stats-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; margin-top: 0.5rem; }
+        .stats-table th, .stats-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--border); text-align: left; }
+        .stats-table th { background: var(--surface); font-weight: 600; position: sticky; top: 0; }
+        .stats-table td.numeric { text-align: right; color: var(--text-muted); }
+        .null-badge { font-size: 0.6875rem; padding: 1px 5px; border-radius: 4px; background: #fef2f2; color: #991b1b; }
+        /* Ref line row */
+        .ref-line-row { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.4rem; }
+        .ref-line-row input { flex: 1; min-width: 60px; }
+        .ref-line-row .btn-remove-filter { padding: 0.25rem 0.45rem; font-size: 0.75rem; }
+
+        /* Two-panel layout */
+        @media (min-width: 780px) {
+            .main {
+                max-width: 1320px;
+                display: grid;
+                grid-template-columns: 340px 1fr;
+                gap: 1.5rem;
+                align-items: start;
+                padding-top: 1.5rem;
+            }
+            .panel-left { min-width: 0; }
+            .panel-right {
+                position: sticky;
+                top: 1rem;
+                min-width: 0;
+            }
+        }
+        @media (max-width: 779px) {
+            .panel-left, .panel-right { display: contents; }
+        }
+
+        /* Chart type search */
+        .chart-type-search {
+            width: 100%;
+            max-width: 360px;
+            padding: 0.5rem 0.75rem 0.5rem 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.9375rem;
+            font-family: inherit;
+            margin-bottom: 0.5rem;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 0.6rem center;
+        }
+        .chart-type-search:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        /* Header icon */
+        .logo-wrap { display: flex; align-items: center; gap: 0.6rem; }
+        .logo-icon { color: var(--primary); flex-shrink: 0; }
+
+        /* ── Report section ─────────────────────────────────── */
+        #reportSection {
+            max-width: 900px;
+            margin: 2rem auto 3rem;
+            padding: 0 1.5rem;
+        }
+        .report-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary);
+        }
+        .report-header-bar h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .report-badge {
+            background: var(--primary);
+            color: white;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 1px 8px;
+            min-width: 20px;
+            text-align: center;
+        }
+        .report-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .report-title-input {
+            width: 100%;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border: none;
+            border-bottom: 2px dashed var(--border);
+            background: transparent;
+            color: var(--text);
+            padding: 0.25rem 0;
+            margin-bottom: 1.5rem;
+            font-family: inherit;
+            outline: none;
+        }
+        .report-title-input:focus { border-bottom-color: var(--primary); }
+        .report-title-input::placeholder { color: var(--border); }
+
+        .report-item {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: box-shadow 0.15s;
+        }
+        .report-item:hover { box-shadow: var(--shadow-lg); }
+        .report-item-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 1rem;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .report-item-num {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .report-item-controls { display: flex; gap: 0.35rem; align-items: center; }
+        .btn-report-ctrl {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8125rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-muted);
+            cursor: pointer;
+            line-height: 1;
+        }
+        .btn-report-ctrl:hover { background: var(--bg); color: var(--text); }
+        .btn-report-ctrl.danger:hover { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+
+        .report-item-body { padding: 1.25rem 1.5rem; }
+        .report-item-title {
+            font-size: 1.0625rem;
+            font-weight: 600;
+            margin: 0 0 0.75rem;
+            color: var(--text);
+        }
+        .report-item-para {
+            font-size: 0.9375rem;
+            color: var(--text);
+            line-height: 1.65;
+            margin: 0;
+            white-space: pre-wrap;
+        }
+        .report-item-para-edit {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            background: var(--surface);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.9375rem;
+            line-height: 1.65;
+            resize: vertical;
+            min-height: 80px;
+        }
+        .report-item-img {
+            width: 100%;
+            display: block;
+            border-radius: 6px;
+            background: var(--bg);
+        }
+        .report-item-img-wrap { margin: 0.75rem 0; }
+
+        /* Add-to-report modal */
+        .report-modal-body { padding: 1.25rem; }
+        .report-modal-body .form-row { margin-bottom: 1rem; }
+        .report-modal-body label { display: block; font-weight: 500; margin-bottom: 0.4rem; font-size: 0.9375rem; }
+        .report-modal-body input,
+        .report-modal-body textarea,
+        .report-modal-body select {
+            width: 100%;
+            max-width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.9375rem;
+        }
+        .report-modal-body textarea { resize: vertical; min-height: 90px; line-height: 1.55; }
+        .report-modal-body .modal-btn-row { display: flex; gap: 0.75rem; margin-top: 1.25rem; }
+        .report-modal-body .modal-btn-row .btn { flex: 1; justify-content: center; }
+
+        /* btn add-to-report in export row */
+        .btn-add-report {
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        .btn-add-report:hover { background: var(--primary-hover); }
+
+        /* Report empty state */
+        .report-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.9375rem;
+        }
+
+        /* Print styles */
+        @media print {
+            .header, .main, footer, #reportSection .report-header-bar .report-actions,
+            .report-item-toolbar, #reportSection .report-title-input { display: block !important; }
+            .header, .main, footer { display: none !important; }
+            #reportSection { display: block !important; max-width: 100%; margin: 0; padding: 1rem; }
+            .report-item { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo-wrap">
+            <svg class="logo-icon" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <rect x="3" y="14" width="4" height="7" rx="1"/>
+                <rect x="10" y="9" width="4" height="12" rx="1"/>
+                <rect x="17" y="4" width="4" height="17" rx="1"/>
+            </svg>
+            <div>
+                <div class="logo">Charts Generator</div>
+                <div class="tagline">Upload CSV or Excel · Pick a chart · Export anywhere</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="panel-left">
+        <div class="status-wrap">
+            <div id="status" class="pending">Loading…</div>
+            <div id="statusActions" class="status-actions" style="display:none;"></div>
+        </div>
+
+        <section class="card">
+            <div class="card-title">Upload data</div>
+            <div class="form-group">
+                <label class="label-row">
+                    CSV or Excel file
+                    <span class="help" title="Upload a .csv, .xlsx, or .xls file. Each column can be used as a chart dimension.">?</span>
+                </label>
+                <div id="dropZone" class="drop-zone" role="button" tabindex="0" aria-label="Drop CSV or Excel file here or click to browse">
+                    <div class="drop-zone-icon">📂</div>
+                    <div class="drop-zone-text">Drag &amp; drop your file here</div>
+                    <div class="drop-zone-hint">or click to browse</div>
+                    <input type="file" id="fileUpload" accept=".csv,.xlsx,.xls" style="display:none" aria-hidden="true">
+                    <div id="selectedFileName" class="drop-zone-filename"></div>
+                </div>
+                <button type="button" id="btnUpload" class="btn btn-primary">Upload dataset</button>
+                <div id="uploadConfirm" class="upload-confirm"></div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-title">Build your chart</div>
+            <div class="form-group">
+                <label for="dataset" class="label-row">
+                    1. Dataset
+                    <span class="help" title="Pick the data source: use the dummy set to try the app, or select one you uploaded.">?</span>
+                </label>
+                <select id="dataset">
+                    <option value="">Choose a dataset…</option>
+                    <option value="dummy_sample">Dummy (test data)</option>
+                </select>
+            </div>
+            <div id="dataPreviewSection" class="data-preview-section" style="display:none;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                    <div class="card-title" style="margin-bottom:0;">Data preview</div>
+                    <div style="display:flex;gap:0.4rem;">
+                        <button type="button" id="btnShowPreview" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.75rem;border-color:var(--primary);color:var(--primary);">Rows</button>
+                        <button type="button" id="btnShowStats" class="btn btn-secondary" style="padding:0.25rem 0.6rem;font-size:0.75rem;">Stats</button>
+                    </div>
+                </div>
+                <p class="data-preview-hint">First rows of your dataset. Use this to confirm columns before generating.</p>
+                <div id="dataPreviewTableWrap" class="data-preview-table-wrap"></div>
+                <div id="dataStatsWrap" class="data-preview-table-wrap" style="display:none;"></div>
+                <p id="dataPreviewMeta" class="data-preview-meta"></p>
+            </div>
+            <div class="form-group">
+                <label for="chartType" class="label-row">
+                    2. Chart type
+                    <span class="help" title="Pie, bar, line, scatter, and 16+ more. Each shows your column in a different way.">?</span>
+                </label>
+                <input type="text" id="chartTypeSearch" class="chart-type-search" placeholder="Search chart types…" style="display:none;" autocomplete="off">
+                <select id="chartType" disabled>
+                    <option value="">Choose a dataset first</option>
+                </select>
+            </div>
+            <div class="form-group" id="variablesSection">
+                <div class="card-title" style="margin-bottom:0.5rem;">3. Variables</div>
+                <p class="variables-hint" id="variablesHint" style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1rem;">Choose a chart type to see required and optional variables.</p>
+                <div id="variableInputs"></div>
+            </div>
+            <div class="form-group" id="aggSection" style="display:none;">
+                <div class="card-title" style="margin-bottom:0.5rem;">4. Aggregation <span style="font-weight:400;text-transform:none;font-size:0.75rem;color:var(--text-muted)">(optional)</span></div>
+                <p style="font-size:0.875rem;color:var(--text-muted);margin:0 0 0.75rem;">Summarise a numeric column instead of counting rows.</p>
+                <div class="var-group">
+                    <label for="aggColumn">Value column</label>
+                    <select id="aggColumn">
+                        <option value="">Count rows (default)</option>
+                    </select>
+                </div>
+                <div class="var-group" id="aggFuncGroup" style="display:none;">
+                    <label for="aggFunc">Function</label>
+                    <select id="aggFunc">
+                        <option value="sum">Sum</option>
+                        <option value="mean">Average</option>
+                        <option value="min">Minimum</option>
+                        <option value="max">Maximum</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" id="dataControlsSection" style="display:none;">
+                <div class="card-title" style="margin-bottom:0.5rem;">5. Data controls <span style="font-weight:400;text-transform:none;font-size:0.75rem;color:var(--text-muted)">(optional)</span></div>
+
+                <div style="margin-bottom:1rem;">
+                    <label style="font-size:0.875rem;font-weight:600;display:block;margin-bottom:0.4rem;">Group by (multi-series)</label>
+                    <p style="font-size:0.8125rem;color:var(--text-muted);margin:0 0 0.4rem;">Split bars/lines by a second column.</p>
+                    <select id="groupByColumn" class="ctrl-select" style="max-width:280px;">
+                        <option value="">None</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom:1rem;">
+                    <label style="font-size:0.875rem;font-weight:600;display:block;margin-bottom:0.4rem;">Date grouping</label>
+                    <select id="dateGroup" class="ctrl-select" style="max-width:200px;">
+                        <option value="none">None</option>
+                        <option value="year">By Year</option>
+                        <option value="quarter">By Quarter</option>
+                        <option value="month">By Month</option>
+                        <option value="week">By Week</option>
+                        <option value="day">By Day</option>
+                    </select>
+                </div>
+
+                <div class="controls-row" style="margin-bottom:1rem;">
+                    <div class="ctrl-group">
+                        <label for="sortOrder">Sort</label>
+                        <select id="sortOrder" class="ctrl-select">
+                            <option value="desc">Highest first</option>
+                            <option value="asc">Lowest first</option>
+                            <option value="none">As in data</option>
+                        </select>
+                    </div>
+                    <div class="ctrl-group">
+                        <label for="topN">Top N</label>
+                        <input type="number" id="topN" class="ctrl-num" min="1" max="500" placeholder="All">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size:0.875rem;font-weight:600;display:block;margin-bottom:0.4rem;">Row filters</label>
+                    <p style="font-size:0.8125rem;color:var(--text-muted);margin:0 0 0.5rem;">Filter rows before charting.</p>
+                    <div id="filterRows"></div>
+                    <button type="button" class="btn-add-filter" id="btnAddFilter">+ Add filter</button>
+                </div>
+            </div>
+
+            <div class="sticky-generate">
+                <button type="button" id="btnGenerate" class="btn btn-primary btn-generate" disabled>Generate chart</button>
+            </div>
+        </section>
+
+        </div><!-- /.panel-left -->
+        <div class="panel-right">
+        <section class="card">
+            <div class="preview-header">
+                <div class="card-title">Preview</div>
+                <button type="button" id="btnResetPreview" class="btn btn-secondary" style="display:none;">Reset preview</button>
+            </div>
+            <div class="chart-wrapper">
+                <div id="chartEmptyState" class="chart-empty-state">Select a dataset, chart type, and variables, then click Generate to see your chart.</div>
+                <div id="chartDiv" class="chart-div"></div>
+            </div>
+            <div id="customizePanel" class="customize-panel" style="display:none;">
+                <div class="card-title">Customize</div>
+                <p class="customize-intro">Change title, fonts, colors, and legend. Updates apply instantly.</p>
+                <div class="customize-grid">
+                    <div class="customize-section">
+                        <div class="customize-section-title">Chart title</div>
+                        <div class="customize-row">
+                            <label>Text</label>
+                            <input type="text" id="custTitle" placeholder="Chart title" class="cust-input">
+                        </div>
+                        <div class="customize-row inline">
+                            <label>Font</label>
+                            <select id="custFontFamily">
+                                <option value="Arial">Arial</option>
+                                <option value="Helvetica">Helvetica</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Verdana">Verdana</option>
+                                <option value="DM Sans">DM Sans</option>
+                            </select>
+                        </div>
+                        <div class="customize-row inline">
+                            <label>Size</label>
+                            <input type="number" id="custTitleSize" min="10" max="48" value="16" class="cust-num">
+                        </div>
+                        <div class="customize-row inline">
+                            <label>Color</label>
+                            <input type="color" id="custTitleColor" value="#1a1a1a" class="cust-color">
+                        </div>
+                        <div class="customize-row inline">
+                            <label>Align</label>
+                            <select id="custTitleAlign">
+                                <option value="left">Left</option>
+                                <option value="center" selected>Center</option>
+                                <option value="right">Right</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="customize-section">
+                        <div class="customize-section-title">Legend</div>
+                        <div class="customize-row inline">
+                            <label class="checkbox-label"><input type="checkbox" id="custShowLegend" checked> Show legend</label>
+                        </div>
+                        <div class="customize-row inline">
+                            <label>Position</label>
+                            <select id="custLegendPosition">
+                                <option value="right" selected>Right</option>
+                                <option value="left">Left</option>
+                                <option value="top">Top</option>
+                                <option value="bottom">Bottom</option>
+                            </select>
+                        </div>
+                        <div class="customize-row">
+                            <label>Legend title</label>
+                            <input type="text" id="custLegendTitle" placeholder="Optional" class="cust-input">
+                        </div>
+                        <div class="customize-row inline">
+                            <label>Font size</label>
+                            <input type="number" id="custLegendFontSize" min="8" max="24" value="12" class="cust-num">
+                        </div>
+                    </div>
+                    <div class="customize-section">
+                        <div class="customize-section-title">Axis labels</div>
+                        <div class="customize-row">
+                            <label>X axis label</label>
+                            <input type="text" id="custAxisTitleX" placeholder="Optional" class="cust-input">
+                        </div>
+                        <div class="customize-row">
+                            <label>Y axis label</label>
+                            <input type="text" id="custAxisTitleY" placeholder="Optional" class="cust-input">
+                        </div>
+                    </div>
+                    <div class="customize-section">
+                        <div class="customize-section-title">Chart size</div>
+                        <div class="customize-row inline">
+                            <label>Width</label>
+                            <input type="number" id="custWidth" min="400" max="2000" value="800" class="cust-num">
+                        </div>
+                        <div class="customize-row inline">
+                            <label>Height</label>
+                            <input type="number" id="custHeight" min="300" max="1200" value="600" class="cust-num">
+                        </div>
+                        <div class="customize-row inline size-presets">
+                            <span class="preset-label">Presets:</span>
+                            <button type="button" class="btn btn-secondary btn-preset" data-w="1200" data-h="630">Social</button>
+                            <button type="button" class="btn btn-secondary btn-preset" data-w="960" data-h="540">Slide</button>
+                            <button type="button" class="btn btn-secondary btn-preset" data-w="1200" data-h="800">Print</button>
+                        </div>
+                        <div class="customize-row">
+                            <button type="button" id="btnResetCustomize" class="btn btn-secondary">Reset customize to defaults</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="customize-section" id="dataColorsSection">
+                    <div class="customize-section-title">Data colors</div>
+                    <p class="customize-desc">Pick a palette or click individual swatches to customise.</p>
+                    <div class="customize-row" style="margin-bottom:0.75rem;">
+                        <label style="font-size:0.8125rem;font-weight:600;margin-bottom:0.4rem;display:block;">Color palette</label>
+                        <div id="paletteChips" class="palette-chips"></div>
+                    </div>
+                    <div id="itemColorsList" class="item-colors-list"></div>
+                </div>
+                <div class="customize-section">
+                    <div class="customize-section-title">Overlays</div>
+                    <div class="customize-row">
+                        <label class="checkbox-label"><input type="checkbox" id="custShowTrendline"> Show trendline (line/scatter)</label>
+                    </div>
+                    <div class="customize-row">
+                        <label class="checkbox-label"><input type="checkbox" id="custShowDataLabels" checked> Show data labels</label>
+                    </div>
+                    <div class="customize-row" style="margin-top:0.5rem;">
+                        <label style="font-size:0.8125rem;font-weight:600;margin-bottom:0.35rem;display:block;">Reference lines</label>
+                        <div id="refLineRows"></div>
+                        <button type="button" class="btn-add-filter" id="btnAddRefLine">+ Add reference line</button>
+                    </div>
+                </div>
+                <div class="customize-section">
+                    <div class="customize-section-title">Export options</div>
+                    <div class="customize-row inline">
+                        <label class="checkbox-label"><input type="checkbox" id="custDarkMode"> Dark background (exports &amp; preview)</label>
+                    </div>
+                </div>
+            </div>
+            <div id="exportRow" class="export-row" style="display:none;">
+                <button type="button" id="btnAddToReport" class="btn btn-add-report">+ Add to Report</button>
+                <span style="font-size:0.875rem;color:var(--text-muted);margin: 0 0.25rem;">Export:</span>
+                <button type="button" id="btnCopyImage" class="btn btn-secondary">Copy image</button>
+                <button type="button" id="btnExportPng" class="btn btn-secondary">PNG</button>
+                <button type="button" id="btnExportPdf" class="btn btn-secondary">PDF</button>
+                <button type="button" id="btnExportHtml" class="btn btn-secondary">HTML</button>
+                <button type="button" id="btnExportR" class="btn btn-secondary">R code</button>
+                <button type="button" id="btnExportPython" class="btn btn-secondary">Python code</button>
+                <button type="button" id="btnExportSvg" class="btn btn-secondary">SVG</button>
+                <button type="button" id="btnShareUrl" class="btn btn-secondary">Share URL</button>
+                <button type="button" id="btnEmbedCode" class="btn btn-secondary">Embed</button>
+            </div>
+            <div id="historySection" class="history-section" style="display:none;">
+                <div class="history-title">
+                    <span>Chart history</span>
+                    <button type="button" id="btnClearHistory" class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.75rem;">Clear</button>
+                </div>
+                <div id="historyGrid" class="history-grid"></div>
+            </div>
+        </section>
+        </div><!-- /.panel-right -->
+    </main>
+
+    <div id="modalOverlay" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Code</h3>
+                <button type="button" id="modalClose" class="btn btn-secondary">Close</button>
+            </div>
+            <div class="modal-body">
+                <pre id="modalPre"></pre>
+                <button type="button" id="btnCopyCode" class="btn btn-primary" style="margin-top:0.75rem;">Copy to clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add to Report Modal -->
+    <div id="reportModal" class="modal-overlay hidden">
+        <div class="modal" style="max-width:520px;">
+            <div class="modal-header">
+                <h3>Add chart to report</h3>
+                <button type="button" id="reportModalClose" class="btn btn-secondary" style="padding:0.3rem 0.6rem;">✕</button>
+            </div>
+            <div class="report-modal-body">
+                <div class="form-row">
+                    <label for="reportChartTitle">Chart title</label>
+                    <input type="text" id="reportChartTitle" placeholder="e.g. Distribution by Category">
+                </div>
+                <div class="form-row">
+                    <label for="reportParagraph">Description <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+                    <textarea id="reportParagraph" placeholder="Write a paragraph about this chart — what does it show, what are the key findings?"></textarea>
+                </div>
+                <div class="form-row">
+                    <label for="reportParaPosition">Description position</label>
+                    <select id="reportParaPosition" style="max-width:220px;">
+                        <option value="above">Above the chart</option>
+                        <option value="below" selected>Below the chart</option>
+                    </select>
+                </div>
+                <div class="modal-btn-row">
+                    <button type="button" id="btnConfirmAddToReport" class="btn btn-primary">Add to report</button>
+                    <button type="button" id="reportModalClose2" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Section -->
+    <section id="reportSection" style="display:none;">
+        <div class="report-header-bar">
+            <h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/></svg>
+                Report
+                <span class="report-badge" id="reportBadge">0</span>
+            </h2>
+            <div class="report-actions">
+                <button type="button" id="btnExportReportHtml" class="btn btn-secondary">Export HTML</button>
+                <button type="button" id="btnPrintReport" class="btn btn-secondary">Print / PDF</button>
+                <button type="button" id="btnClearReport" class="btn btn-secondary" style="color:#991b1b;">Clear all</button>
+            </div>
+        </div>
+        <input type="text" id="reportTitle" class="report-title-input" placeholder="Report title…">
+        <div id="reportItemsContainer"></div>
+    </section>
+
+    <footer class="footer">
+        Charts Generator · Create charts from your data · CSV & Excel supported
+    </footer>
+
+    <script>
+        var API = '/api';
+        var statusEl = document.getElementById('status');
+        var statusActionsEl = document.getElementById('statusActions');
+        var datasetEl = document.getElementById('dataset');
+        var chartTypeEl = document.getElementById('chartType');
+        var variableInputsEl = document.getElementById('variableInputs');
+        var variablesHintEl = document.getElementById('variablesHint');
+        var btnGenerate = document.getElementById('btnGenerate');
+        var currentColumns = [];
+        var fileUploadEl = document.getElementById('fileUpload');
+        var btnUpload = document.getElementById('btnUpload');
+        var exportRow = document.getElementById('exportRow');
+        var modalOverlay = document.getElementById('modalOverlay');
+        var modalPre = document.getElementById('modalPre');
+        var btnResetPreview = document.getElementById('btnResetPreview');
+        var customizePanel = document.getElementById('customizePanel');
+        var itemColorsList = document.getElementById('itemColorsList');
+        var dataColorsSection = document.getElementById('dataColorsSection');
+
+        var DEFAULT_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f'];
+        var chartColors = DEFAULT_COLORS.slice();
+
+        var PALETTES = {
+            default:     { name: 'Default',        colors: ['#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd','#8c564b','#e377c2','#7f7f7f'] },
+            colorblind:  { name: 'Colorblind-safe', colors: ['#0072B2','#E69F00','#009E73','#CC79A7','#56B4E9','#F0E442','#D55E00','#999999'] },
+            pastel:      { name: 'Pastel',          colors: ['#a8d8ea','#aa96da','#fcbad3','#ffffd2','#a0c4ff','#caffbf','#ffd6a5','#ffadad'] },
+            bold:        { name: 'Bold',            colors: ['#e63946','#457b9d','#2a9d8f','#e9c46a','#f4a261','#264653','#8ecae6','#6d6875'] },
+            corporate:   { name: 'Corporate',       colors: ['#003f5c','#2f4b7c','#665191','#a05195','#d45087','#f95d6a','#ff7c43','#ffa600'] },
+            earth:       { name: 'Earth',           colors: ['#606c38','#283618','#dda15e','#bc6c25','#8b7355','#a0785a','#c4a882','#e8d5b7'] },
+        };
+        var activePalette = 'default';
+
+        var CHART_CATEGORY_ORDER = ['Part-of-whole', 'Comparison', 'Trend', 'Distribution', 'Other'];
+        var individualColors = {};
+        var currentChartLabels = [];
+        var currentChartTraceIndex = 0;
+        var currentChartColorKey = 'marker.colors';
+        var CUSTOMIZE_DEBOUNCE_MS = 280;
+        var customizeDebounceTimer = null;
+        var STORAGE_KEY = 'chartsGenerator';
+
+        function setStatus(msg, type) {
+            statusEl.innerHTML = '';
+            statusEl.className = type || 'pending';
+            if (type === 'pending') {
+                var spinner = document.createElement('span');
+                spinner.className = 'spinner';
+                statusEl.appendChild(spinner);
+            }
+            statusEl.appendChild(document.createTextNode(msg));
+
+            statusActionsEl.style.display = 'none';
+            statusActionsEl.innerHTML = '';
+            if (type === 'error') {
+                var retry = document.createElement('button');
+                retry.type = 'button';
+                retry.className = 'btn btn-secondary';
+                retry.textContent = 'Retry';
+                retry.onclick = function() { setStatus('Loading…', 'pending'); loadChartTypes().then(loadDatasets); };
+                var link = document.createElement('a');
+                link.href = 'http://localhost:5000';
+                link.target = '_blank';
+                link.rel = 'noopener';
+                link.className = 'btn btn-primary';
+                link.textContent = 'Open app';
+                link.style.marginTop = '0';
+                statusActionsEl.appendChild(retry);
+                statusActionsEl.appendChild(link);
+                statusActionsEl.style.display = 'flex';
+            }
+        }
+
+        var chartTypes = [];
+        var chartTypeSearchEl = document.getElementById('chartTypeSearch');
+
+        function loadChartTypes() {
+            return fetch(API + '/chart-types')
+                .then(function(r) { return r.json(); })
+                .then(function(data) { chartTypes = data.chart_types || []; })
+                .catch(function() { chartTypes = [{ id: 'pie', name: 'Pie Chart', description: '' }]; });
+        }
+
+        function fillChartTypeSelect(query) {
+            var q = (query || '').toLowerCase().trim();
+            chartTypeEl.innerHTML = '<option value="">Choose a chart type…</option>';
+            var realTypes = chartTypes.filter(function(t) { return !t.id.startsWith('chart_type_'); });
+            if (q) {
+                var filtered = realTypes.filter(function(t) {
+                    return t.name.toLowerCase().includes(q) || (t.description || '').toLowerCase().includes(q) || (t.category || '').toLowerCase().includes(q);
+                });
+                filtered.forEach(function(t) {
+                    var opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.name + (t.description ? ' — ' + t.description : '');
+                    chartTypeEl.appendChild(opt);
+                });
+                if (!filtered.length) {
+                    var opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = 'No matches found';
+                    opt.disabled = true;
+                    chartTypeEl.appendChild(opt);
+                }
+                return;
+            }
+            var grouped = {};
+            CHART_CATEGORY_ORDER.forEach(function(cat) { grouped[cat] = []; });
+            realTypes.forEach(function(t) {
+                var cat = t.category || 'Other';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(t);
+            });
+            CHART_CATEGORY_ORDER.forEach(function(cat) {
+                if (!grouped[cat] || !grouped[cat].length) return;
+                var grp = document.createElement('optgroup');
+                grp.label = cat;
+                grouped[cat].forEach(function(t) {
+                    var opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.name + (t.description ? ' — ' + t.description : '');
+                    grp.appendChild(opt);
+                });
+                chartTypeEl.appendChild(grp);
+            });
+        }
+
+        chartTypeSearchEl.addEventListener('input', function() {
+            fillChartTypeSelect(this.value);
+            chartTypeEl.value = '';
+            buildVariableInputs();
+            document.getElementById('aggSection').style.display = 'none';
+            document.getElementById('dataControlsSection').style.display = 'none';
+            btnGenerate.disabled = true;
+        });
+
+        function getCurrentChartVariables() {
+            var id = chartTypeEl.value;
+            if (!id) return [];
+            var t = chartTypes.find(function(c) { return c.id === id; });
+            return (t && t.variables) ? t.variables : [{ key: 'column', label: 'Column', required: true, description: 'Category or value column to visualize.' }];
+        }
+
+        function buildVariableInputs() {
+            variableInputsEl.innerHTML = '';
+            var vars = getCurrentChartVariables();
+            var chartId = chartTypeEl.value;
+            if (!chartId || !currentColumns.length) {
+                variablesHintEl.textContent = chartId ? 'Load a dataset to choose columns.' : 'Choose a chart type to see required and optional variables.';
+                return;
+            }
+            var requiredCount = vars.filter(function(v) { return v.required; }).length;
+            var optionalCount = vars.filter(function(v) { return !v.required; }).length;
+            var hintParts = [];
+            if (requiredCount) hintParts.push(requiredCount + ' required');
+            if (optionalCount) hintParts.push(optionalCount + ' optional');
+            variablesHintEl.textContent = 'This chart uses ' + (hintParts.join(', ') || '1 variable') + '.';
+            vars.forEach(function(v) {
+                var wrap = document.createElement('div');
+                wrap.className = 'var-group';
+                var labelRow = document.createElement('label');
+                labelRow.className = 'var-label-row';
+                var span = document.createElement('span');
+                span.textContent = v.label + ' ';
+                labelRow.appendChild(span);
+                var badge = document.createElement('span');
+                badge.className = v.required ? 'var-required' : 'var-optional';
+                badge.textContent = v.required ? '(required)' : '(optional)';
+                labelRow.appendChild(badge);
+                if (v.description) {
+                    var help = document.createElement('span');
+                    help.className = 'help';
+                    help.title = v.description;
+                    help.textContent = ' ?';
+                    labelRow.appendChild(help);
+                }
+                wrap.appendChild(labelRow);
+                if (v.description) {
+                    var desc = document.createElement('div');
+                    desc.className = 'var-desc';
+                    desc.textContent = v.description;
+                    wrap.appendChild(desc);
+                }
+                var sel = document.createElement('select');
+                sel.setAttribute('data-key', v.key);
+                sel.setAttribute('aria-label', v.label);
+                var emptyOpt = document.createElement('option');
+                emptyOpt.value = '';
+                emptyOpt.textContent = v.required ? 'Choose ' + v.label + '…' : 'None (optional)';
+                sel.appendChild(emptyOpt);
+                currentColumns.forEach(function(c) {
+                    var opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    sel.appendChild(opt);
+                });
+                sel.addEventListener('change', function() { updateGenerateButton(); });
+                wrap.appendChild(sel);
+                variableInputsEl.appendChild(wrap);
+            });
+            updateGenerateButton();
+        }
+
+        function getColumnsPayload() {
+            var payload = {};
+            var vars = getCurrentChartVariables();
+            vars.forEach(function(v) {
+                var sel = variableInputsEl.querySelector('select[data-key="' + v.key + '"]');
+                if (sel && sel.value) payload[v.key] = sel.value;
+            });
+            return payload;
+        }
+
+        function allRequiredVariablesSet() {
+            var vars = getCurrentChartVariables();
+            return vars.filter(function(v) { return v.required; }).every(function(v) {
+                var sel = variableInputsEl.querySelector('select[data-key="' + v.key + '"]');
+                return sel && sel.value;
+            });
+        }
+
+        function updateGenerateButton() {
+            btnGenerate.disabled = !(datasetEl.value && chartTypeEl.value && allRequiredVariablesSet());
+        }
+
+        async function loadDatasets() {
+            try {
+                var r = await fetch(API + '/datasets');
+                var data = await r.json();
+                var list = data.datasets || [];
+                if (!list.some(function(d) { return d.id === 'dummy_sample'; }))
+                    list.unshift({ id: 'dummy_sample', name: 'Dummy (test data)', type: 'sample' });
+                datasetEl.innerHTML = '<option value="">Choose a dataset…</option>';
+                list.forEach(function(d) {
+                    var opt = document.createElement('option');
+                    opt.value = d.id;
+                    opt.textContent = d.name + ' (' + d.type + ')';
+                    datasetEl.appendChild(opt);
+                });
+                var saved = getSavedState();
+                if (saved && saved.datasetId && datasetEl.querySelector('option[value="' + saved.datasetId + '"]')) {
+                    datasetEl.value = saved.datasetId;
+                    chartTypeEl.disabled = false;
+                    chartTypeSearchEl.style.display = '';
+                    fillChartTypeSelect();
+                    loadColumns(saved.datasetId);
+                    loadDataPreview(saved.datasetId);
+                }
+                setStatus('Ready. Select a dataset, chart type, and column, then generate.', 'success');
+            } catch (e) {
+                setStatus('Cannot reach the server. Start the backend (e.g. python app.py in the backend folder) and open http://localhost:5000', 'error');
+            }
+        }
+
+        datasetEl.addEventListener('change', function() {
+            var id = datasetEl.value;
+            var dataPreviewSection = document.getElementById('dataPreviewSection');
+            if (!id) {
+                chartTypeEl.disabled = true;
+                chartTypeEl.innerHTML = '<option value="">Choose a dataset first</option>';
+                chartTypeSearchEl.style.display = 'none';
+                chartTypeSearchEl.value = '';
+                currentColumns = [];
+                buildVariableInputs();
+                btnGenerate.disabled = true;
+                exportRow.style.display = 'none';
+                if (dataPreviewSection) dataPreviewSection.style.display = 'none';
+                return;
+            }
+            chartTypeEl.disabled = false;
+            chartTypeSearchEl.style.display = '';
+            fillChartTypeSelect();
+            currentColumns = [];
+            buildVariableInputs();
+            btnGenerate.disabled = true;
+            loadColumns(id);
+            loadDataPreview(id);
+        });
+
+        function loadColumns(datasetId) {
+            setStatus('Loading columns…', 'pending');
+            fetch(API + '/datasets/' + encodeURIComponent(datasetId) + '/columns')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    currentColumns = data.columns || [];
+                    buildVariableInputs();
+                    restoreSavedChoices();
+                    setStatus('Select required variables for your chart, then click Generate.', 'success');
+                })
+                .catch(function(e) {
+                    setStatus('Error loading columns: ' + e.message, 'error');
+                });
+        }
+
+        function loadDataPreview(datasetId) {
+            var wrap = document.getElementById('dataPreviewTableWrap');
+            var meta = document.getElementById('dataPreviewMeta');
+            var section = document.getElementById('dataPreviewSection');
+            if (!section || !wrap) return;
+            section.style.display = 'block';
+            wrap.innerHTML = '<span class="pending">Loading…</span>';
+            if (meta) meta.textContent = '';
+            fetch(API + '/datasets/' + encodeURIComponent(datasetId) + '/preview?rows=10')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.error) throw new Error(data.error);
+                    var cols = data.columns || [];
+                    var rows = data.rows || [];
+                    var total = data.row_count != null ? data.row_count : rows.length;
+                    var table = document.createElement('table');
+                    var thead = document.createElement('thead');
+                    var tr = document.createElement('tr');
+                    cols.forEach(function(c) {
+                        var th = document.createElement('th');
+                        th.textContent = c;
+                        tr.appendChild(th);
+                    });
+                    thead.appendChild(tr);
+                    table.appendChild(thead);
+                    var tbody = document.createElement('tbody');
+                    rows.forEach(function(row) {
+                        var tr = document.createElement('tr');
+                        cols.forEach(function(col) {
+                            var td = document.createElement('td');
+                            td.textContent = row[col] !== undefined && row[col] !== null ? String(row[col]) : '';
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    });
+                    table.appendChild(tbody);
+                    wrap.innerHTML = '';
+                    wrap.appendChild(table);
+                    if (meta) meta.textContent = 'Showing first ' + rows.length + ' of ' + total + ' rows.';
+                })
+                .catch(function(e) {
+                    wrap.innerHTML = '';
+                    if (meta) meta.textContent = 'Preview unavailable.';
+                });
+        }
+
+        function getSavedState() {
+            try {
+                var raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+
+        function saveChoices() {
+            try {
+                var payload = { datasetId: datasetEl.value, chartType: chartTypeEl.value, columns: getColumnsPayload() };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            } catch (e) {}
+        }
+
+        function restoreSavedChoices() {
+            try {
+                var raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                var saved = JSON.parse(raw);
+                if (saved.datasetId !== datasetEl.value) return;
+                if (saved.chartType && chartTypeEl.querySelector('option[value="' + saved.chartType + '"]')) {
+                    chartTypeEl.value = saved.chartType;
+                    buildVariableInputs();
+                }
+                if (saved.columns && typeof saved.columns === 'object') {
+                    var vars = getCurrentChartVariables();
+                    vars.forEach(function(v) {
+                        var val = saved.columns[v.key];
+                        if (val) {
+                            var sel = variableInputsEl.querySelector('select[data-key="' + v.key + '"]');
+                            if (sel && sel.querySelector('option[value="' + val + '"]')) sel.value = val;
+                        }
+                    });
+                    updateGenerateButton();
+                }
+            } catch (e) {}
+        }
+
+        chartTypeEl.addEventListener('change', function() {
+            buildVariableInputs();
+        });
+
+        function getCustEl(id) { return document.getElementById(id); }
+        function getCustomization() {
+            var payload = getColumnsPayload();
+            var firstCol = payload.column || payload.x_column || payload.y_column || '';
+            var cust = {
+                title: (getCustEl('custTitle') && getCustEl('custTitle').value) ? getCustEl('custTitle').value : firstCol,
+                font_family: (getCustEl('custFontFamily') && getCustEl('custFontFamily').value) || 'Arial',
+                font_size: parseInt((getCustEl('custTitleSize') && getCustEl('custTitleSize').value) || 16, 10),
+                title_font_color: (getCustEl('custTitleColor') && getCustEl('custTitleColor').value) || '#1a1a1a',
+                title_anchor: (getCustEl('custTitleAlign') && getCustEl('custTitleAlign').value) || 'center',
+                show_legend: getCustEl('custShowLegend') ? getCustEl('custShowLegend').checked : true,
+                legend_position: (getCustEl('custLegendPosition') && getCustEl('custLegendPosition').value) || 'right',
+                legend_title: (getCustEl('custLegendTitle') && getCustEl('custLegendTitle').value) || '',
+                legend_font_size: parseInt((getCustEl('custLegendFontSize') && getCustEl('custLegendFontSize').value) || 12, 10),
+                width: parseInt((getCustEl('custWidth') && getCustEl('custWidth').value) || 800, 10),
+                height: parseInt((getCustEl('custHeight') && getCustEl('custHeight').value) || 600, 10),
+                axis_title_x: (getCustEl('custAxisTitleX') && getCustEl('custAxisTitleX').value) ? getCustEl('custAxisTitleX').value : '',
+                axis_title_y: (getCustEl('custAxisTitleY') && getCustEl('custAxisTitleY').value) ? getCustEl('custAxisTitleY').value : '',
+                colors: chartColors.slice()
+            };
+            if (Object.keys(individualColors).length) cust.individual_colors = individualColors;
+            return cust;
+        }
+
+        function applyCustomizationToChartImmediate() {
+            var el = function(id) { return document.getElementById(id); };
+            if (!el('chartDiv')) return;
+            var titleText = (el('custTitle') && el('custTitle').value) || '';
+            var fontFamily = (el('custFontFamily') && el('custFontFamily').value) || 'Arial';
+            var titleSize = parseInt((el('custTitleSize') && el('custTitleSize').value) || 16, 10);
+            var titleColor = (el('custTitleColor') && el('custTitleColor').value) || '#1a1a1a';
+            var align = (el('custTitleAlign') && el('custTitleAlign').value) || 'center';
+            var titleX = align === 'left' ? 0 : (align === 'right' ? 1 : 0.5);
+            var xanchor = align === 'left' ? 'left' : (align === 'right' ? 'right' : 'center');
+            var showLegend = el('custShowLegend') ? el('custShowLegend').checked : true;
+            var legPos = (el('custLegendPosition') && el('custLegendPosition').value) || 'right';
+            var legTitle = (el('custLegendTitle') && el('custLegendTitle').value) || '';
+            var legFontSize = parseInt((el('custLegendFontSize') && el('custLegendFontSize').value) || 12, 10);
+            var w = parseInt((el('custWidth') && el('custWidth').value) || 800, 10);
+            var h = parseInt((el('custHeight') && el('custHeight').value) || 600, 10);
+            var axisX = (el('custAxisTitleX') && el('custAxisTitleX').value) ? el('custAxisTitleX').value : undefined;
+            var axisY = (el('custAxisTitleY') && el('custAxisTitleY').value) ? el('custAxisTitleY').value : undefined;
+            var update = {
+                title: { text: titleText, font: { family: fontFamily, size: titleSize, color: titleColor }, x: titleX, xanchor: xanchor },
+                showlegend: showLegend,
+                width: w,
+                height: h
+            };
+            if (axisX !== undefined) update.xaxis = { title: { text: axisX } };
+            if (axisY !== undefined) update.yaxis = { title: { text: axisY } };
+            if (showLegend && legPos !== 'none') {
+                update.legend = {
+                    orientation: (legPos === 'left' || legPos === 'right') ? 'v' : 'h',
+                    x: legPos === 'right' ? 1.02 : (legPos === 'left' ? -0.1 : 0.5),
+                    y: legPos === 'top' ? 1 : (legPos === 'bottom' ? -0.1 : 0.5),
+                    xanchor: legPos === 'right' ? 'left' : (legPos === 'left' ? 'right' : 'center'),
+                    yanchor: legPos === 'top' ? 'top' : (legPos === 'bottom' ? 'bottom' : 'middle'),
+                    font: { family: fontFamily, size: legFontSize }
+                };
+                if (legTitle) update.legend.title = { text: legTitle };
+            }
+            try { Plotly.relayout('chartDiv', update); } catch (e) {}
+        }
+
+        function applyCustomizationToChart() {
+            if (customizeDebounceTimer) clearTimeout(customizeDebounceTimer);
+            customizeDebounceTimer = setTimeout(function() { applyCustomizationToChartImmediate(); customizeDebounceTimer = null; }, CUSTOMIZE_DEBOUNCE_MS);
+        }
+
+        function initCustomizePanelFromLayout(layout) {
+            function setVal(id, val) { var e = document.getElementById(id); if (e && val !== undefined && val !== null) e.value = val; }
+            function setCheck(id, val) { var e = document.getElementById(id); if (e && typeof val === 'boolean') e.checked = val; }
+            if (!layout) return;
+            var t = layout.title;
+            if (t && t.text) setVal('custTitle', t.text);
+            if (t && t.font) {
+                setVal('custFontFamily', t.font.family);
+                setVal('custTitleSize', t.font.size);
+                setVal('custTitleColor', t.font.color);
+            }
+            if (layout.showlegend !== undefined) setCheck('custShowLegend', layout.showlegend);
+            if (layout.legend) {
+                if (layout.legend.font && layout.legend.font.size != null) setVal('custLegendFontSize', layout.legend.font.size);
+                if (layout.legend.title && layout.legend.title.text) setVal('custLegendTitle', layout.legend.title.text);
+            }
+            setVal('custWidth', layout.width);
+            setVal('custHeight', layout.height);
+            if (layout.xaxis && layout.xaxis.title && layout.xaxis.title.text) setVal('custAxisTitleX', layout.xaxis.title.text);
+            if (layout.yaxis && layout.yaxis.title && layout.yaxis.title.text) setVal('custAxisTitleY', layout.yaxis.title.text);
+        }
+
+        function bindCustomizePanel() {
+            var ids = ['custTitle', 'custFontFamily', 'custTitleSize', 'custTitleColor', 'custTitleAlign', 'custShowLegend', 'custLegendPosition', 'custLegendTitle', 'custLegendFontSize', 'custWidth', 'custHeight', 'custAxisTitleX', 'custAxisTitleY'];
+            ids.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                var ev = el.type === 'checkbox' ? 'change' : 'input';
+                el.addEventListener(ev, function() { applyCustomizationToChart(); });
+            });
+            document.querySelectorAll('.btn-preset').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var w = parseInt(btn.getAttribute('data-w'), 10);
+                    var h = parseInt(btn.getAttribute('data-h'), 10);
+                    var ew = document.getElementById('custWidth');
+                    var eh = document.getElementById('custHeight');
+                    if (ew) ew.value = w;
+                    if (eh) eh.value = h;
+                    applyCustomizationToChart();
+                });
+            });
+            var btnReset = document.getElementById('btnResetCustomize');
+            if (btnReset) {
+                btnReset.addEventListener('click', function() {
+                    function setVal(id, val) { var e = document.getElementById(id); if (e) e.value = val; }
+                    function setCheck(id, val) { var e = document.getElementById(id); if (e) e.checked = val; }
+                    setVal('custTitle', '');
+                    setVal('custFontFamily', 'Arial');
+                    setVal('custTitleSize', 16);
+                    setVal('custTitleColor', '#1a1a1a');
+                    setVal('custTitleAlign', 'center');
+                    setCheck('custShowLegend', true);
+                    setVal('custLegendPosition', 'right');
+                    setVal('custLegendTitle', '');
+                    setVal('custLegendFontSize', 12);
+                    setVal('custWidth', 800);
+                    setVal('custHeight', 600);
+                    setVal('custAxisTitleX', '');
+                    setVal('custAxisTitleY', '');
+                    applyCustomizationToChartImmediate();
+                });
+            }
+        }
+
+        function getColorsForLabels(labels) {
+            return labels.map(function(lbl, i) {
+                return individualColors[lbl] || chartColors[i] || DEFAULT_COLORS[i % DEFAULT_COLORS.length];
+            });
+        }
+
+        function applyItemColorToChart() {
+            if (currentChartLabels.length === 0) return;
+            var newColors = getColorsForLabels(currentChartLabels);
+            var update = {};
+            update[currentChartColorKey] = [newColors];
+            Plotly.restyle('chartDiv', update, [currentChartTraceIndex]);
+        }
+
+        function buildItemColorRows(labels, initialColors) {
+            itemColorsList.innerHTML = '';
+            currentChartLabels = labels;
+            if (!labels || labels.length === 0) return;
+            labels.forEach(function(lbl, i) {
+                var hex = initialColors[i] || chartColors[i] || DEFAULT_COLORS[i % DEFAULT_COLORS.length];
+                if (individualColors[lbl]) hex = individualColors[lbl];
+                var row = document.createElement('div');
+                row.className = 'item-color-row';
+                var labelEl = document.createElement('label');
+                labelEl.textContent = lbl.length > 40 ? lbl.substring(0, 37) + '…' : lbl;
+                var input = document.createElement('input');
+                input.type = 'color';
+                input.value = hex;
+                input.setAttribute('aria-label', 'Color for ' + lbl);
+                (function(label) {
+                    input.addEventListener('input', function() {
+                        individualColors[label] = input.value;
+                        applyItemColorToChart();
+                    });
+                })(lbl);
+                row.appendChild(labelEl);
+                row.appendChild(input);
+                itemColorsList.appendChild(row);
+            });
+        }
+
+        function resetPreview() {
+            var chartWrapper = document.querySelector('.chart-wrapper');
+            if (chartWrapper) chartWrapper.classList.remove('has-chart');
+            document.getElementById('chartDiv').innerHTML = '';
+            exportRow.style.display = 'none';
+            btnResetPreview.style.display = 'none';
+            if (customizePanel) customizePanel.style.display = 'none';
+            individualColors = {};
+            currentChartLabels = [];
+            setStatus('Preview cleared. Change options and click Generate chart to create a new one.', 'success');
+        }
+
+        btnResetPreview.addEventListener('click', resetPreview);
+
+        btnGenerate.addEventListener('click', function() {
+            var datasetId = datasetEl.value, chartType = chartTypeEl.value, columns = getColumnsPayload();
+            if (!datasetId || !chartType || !allRequiredVariablesSet()) return;
+            setStatus('Generating chart…', 'pending');
+            btnGenerate.disabled = true;
+            fetch(API + '/charts/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chart_type: chartType,
+                    dataset_id: datasetId,
+                    columns: columns,
+                    customization: getCustomization()
+                })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) throw new Error(data.error);
+                var plotDiv = document.getElementById('chartDiv');
+                plotDiv.innerHTML = '';
+                if (data.data && data.data.data && data.data.layout) {
+                    var layout = data.data.layout;
+                    layout.autosize = true;
+                    if (layout.width) delete layout.width;
+                    if (layout.height) delete layout.height;
+                    layout.margin = layout.margin || {};
+                    layout.margin.l = layout.margin.l || 50;
+                    layout.margin.r = layout.margin.r || 50;
+                    layout.margin.t = layout.margin.t || 60;
+                    layout.margin.b = layout.margin.b || 50;
+                    Plotly.newPlot('chartDiv', data.data.data, layout, { responsive: true, displayModeBar: true });
+                    individualColors = {};
+                    var trace = data.data.data[0];
+                    currentChartColorKey = (trace.type === 'pie' || trace.type === 'funnel') ? 'marker.colors' : 'marker.color';
+                    var labels = trace.labels || trace.x || trace.y || [];
+                    if (typeof labels[0] === 'number') labels = labels.map(String);
+                    var initialColors = trace.marker && (trace.marker.colors || trace.marker.color);
+                    if (initialColors && !Array.isArray(initialColors)) initialColors = [initialColors];
+                    if (!initialColors || initialColors.length !== labels.length) initialColors = getColorsForLabels(labels);
+                    buildItemColorRows(labels, initialColors);
+                    var chartWrapper = document.querySelector('.chart-wrapper');
+                    if (chartWrapper) chartWrapper.classList.add('has-chart');
+                    customizePanel.style.display = 'block';
+                    if (dataColorsSection) dataColorsSection.style.display = labels.length > 0 ? 'block' : 'none';
+                    initCustomizePanelFromLayout(data.data.layout);
+                    saveChoices();
+                    setStatus('Chart generated. Customize title, fonts, and colors below — changes apply instantly.', 'success');
+                    exportRow.style.display = 'flex';
+                    btnResetPreview.style.display = 'inline-flex';
+                } else setStatus('Unexpected response.', 'error');
+            })
+            .catch(function(e) { setStatus('Error: ' + e.message, 'error'); })
+            .finally(function() { btnGenerate.disabled = false; });
+        });
+
+        function doExport(format) {
+            var datasetId = datasetEl.value, chartType = chartTypeEl.value, columns = getColumnsPayload();
+            if (!datasetId || !chartType || !allRequiredVariablesSet()) return;
+            setStatus('Preparing ' + format.toUpperCase() + '…', 'pending');
+            fetch(API + '/charts/export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chart_type: chartType,
+                    dataset_id: datasetId,
+                    columns: columns,
+                    customization: getCustomization(),
+                    format: format
+                })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) throw new Error(data.error);
+                if (format === 'r' || format === 'python') {
+                    document.getElementById('modalTitle').textContent = format === 'python' ? 'Python code' : 'R code';
+                    modalPre.textContent = data.code || '';
+                    modalOverlay.classList.remove('hidden');
+                    setStatus('Code ready. Copy and paste into your ' + (format === 'python' ? 'Python' : 'R') + ' environment.', 'success');
+                    return;
+                }
+                var blob, name, mime;
+                if (format === 'png' || format === 'pdf') {
+                    var binary = atob(data.data);
+                    var bytes = new Uint8Array(binary.length);
+                    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                    blob = new Blob([bytes], { type: format === 'png' ? 'image/png' : 'application/pdf' });
+                    name = 'chart.' + format;
+                } else {
+                    blob = new Blob([data.content], { type: 'text/html' });
+                    name = 'chart.html';
+                }
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = name;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                setStatus('Downloaded ' + name, 'success');
+            })
+            .catch(function(e) {
+                setStatus('Export failed: ' + e.message, 'error');
+            });
+        }
+
+        function copyChartImage() {
+            var el = document.getElementById('chartDiv');
+            if (!el || !el.querySelector('.plot-container')) { setStatus('No chart to copy.', 'error'); return; }
+            setStatus('Copying image…', 'pending');
+            var w = parseInt(document.getElementById('custWidth') && document.getElementById('custWidth').value, 10) || 800;
+            var h = parseInt(document.getElementById('custHeight') && document.getElementById('custHeight').value, 10) || 600;
+            Plotly.toImage(el, { format: 'png', width: w, height: h })
+                .then(function(dataUrl) {
+                    return fetch(dataUrl).then(function(r) { return r.blob(); });
+                })
+                .then(function(blob) {
+                    if (navigator.clipboard && navigator.clipboard.write) {
+                        return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                    }
+                    throw new Error('Clipboard not supported');
+                })
+                .then(function() { setStatus('Chart copied to clipboard. Paste into your document.', 'success'); })
+                .catch(function(e) { setStatus('Could not copy: ' + (e.message || 'clipboard not available').replace('Clipboard not supported', 'Use Ctrl+C after clicking the chart, or export PNG.'), 'error'); });
+        }
+        document.getElementById('btnCopyImage').onclick = copyChartImage;
+        document.getElementById('btnExportPng').onclick = function() { doExport('png'); };
+        document.getElementById('btnExportPdf').onclick = function() { doExport('pdf'); };
+        document.getElementById('btnExportHtml').onclick = function() { doExport('html'); };
+        document.getElementById('btnExportR').onclick = function() { doExport('r'); };
+
+        document.getElementById('modalClose').onclick = function() {
+            modalOverlay.classList.add('hidden');
+        };
+        modalOverlay.onclick = function(e) {
+            if (e.target === modalOverlay) modalOverlay.classList.add('hidden');
+        };
+        document.getElementById('btnCopyCode').onclick = function() {
+            navigator.clipboard.writeText(modalPre.textContent).then(function() {
+                setStatus('Code copied to clipboard.', 'success');
+            }).catch(function() {
+                setStatus('Could not copy.', 'error');
+            });
+        };
+
+        // --- Drag-and-drop upload ---
+        var dropZone = document.getElementById('dropZone');
+        var selectedFileName = document.getElementById('selectedFileName');
+        var uploadConfirm = document.getElementById('uploadConfirm');
+
+        function setSelectedFile(file) {
+            if (!file) return;
+            fileUploadEl.files; // reference
+            // Create a DataTransfer to assign file to input
+            try {
+                var dt = new DataTransfer();
+                dt.items.add(file);
+                fileUploadEl.files = dt.files;
+            } catch(e) {}
+            selectedFileName.textContent = file.name + ' (' + (file.size > 1024*1024 ? (file.size/1024/1024).toFixed(1)+'MB' : Math.round(file.size/1024)+'KB') + ')';
+            dropZone.style.borderColor = 'var(--primary)';
+        }
+
+        dropZone.addEventListener('click', function(e) {
+            if (e.target !== fileUploadEl) fileUploadEl.click();
+        });
+        dropZone.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileUploadEl.click(); }
+        });
+        fileUploadEl.addEventListener('change', function() {
+            if (fileUploadEl.files && fileUploadEl.files[0]) setSelectedFile(fileUploadEl.files[0]);
+        });
+        dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('drag-over'); });
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            var file = e.dataTransfer.files[0];
+            if (file) setSelectedFile(file);
+        });
+
+        btnUpload.addEventListener('click', function() {
+            if (!fileUploadEl.files || fileUploadEl.files.length === 0) {
+                setStatus('Please select a CSV or Excel file first.', 'error');
+                return;
+            }
+            var formData = new FormData();
+            formData.append('file', fileUploadEl.files[0]);
+            setStatus('Uploading…', 'pending');
+            btnUpload.disabled = true;
+            uploadConfirm.style.display = 'none';
+            fetch(API + '/datasets/upload', { method: 'POST', body: formData })
+            .then(function(r) {
+                if (!r.ok) return r.json().then(function(d) { throw new Error(d.error || 'Upload failed'); });
+                return r.json();
+            })
+            .then(function(data) {
+                if (!data.id) throw new Error('No dataset id');
+                var msg = '✓ ' + (data.name || data.id);
+                if (data.row_count) msg += ' — ' + data.row_count.toLocaleString() + ' rows';
+                if (data.columns) msg += ', ' + data.columns.length + ' columns';
+                uploadConfirm.textContent = msg;
+                uploadConfirm.style.display = 'block';
+                setStatus('Uploaded successfully. Auto-selected below.', 'success');
+                loadDatasets().then(function() {
+                    datasetEl.value = data.id;
+                    if (datasetEl.value) datasetEl.dispatchEvent(new Event('change'));
+                });
+            })
+            .catch(function(e) { setStatus('Upload failed: ' + e.message, 'error'); })
+            .finally(function() { btnUpload.disabled = false; });
+        });
+
+        // --- Palette chips ---
+        function buildPaletteChips() {
+            var container = document.getElementById('paletteChips');
+            if (!container) return;
+            container.innerHTML = '';
+            Object.keys(PALETTES).forEach(function(key) {
+                var p = PALETTES[key];
+                var wrap = document.createElement('div');
+                wrap.style.display = 'inline-block';
+                var chip = document.createElement('div');
+                chip.className = 'palette-chip' + (key === activePalette ? ' active' : '');
+                chip.title = p.name;
+                chip.setAttribute('data-palette', key);
+                p.colors.slice(0, 6).forEach(function(c) {
+                    var s = document.createElement('span');
+                    s.style.background = c;
+                    chip.appendChild(s);
+                });
+                var lbl = document.createElement('span');
+                lbl.className = 'palette-chip-label';
+                lbl.textContent = p.name;
+                chip.addEventListener('click', function() {
+                    activePalette = key;
+                    chartColors = PALETTES[key].colors.slice();
+                    individualColors = {};
+                    buildPaletteChips();
+                    applyItemColorToChart();
+                    // Rebuild color swatches
+                    buildItemColorRows(currentChartLabels, getColorsForLabels(currentChartLabels));
+                });
+                wrap.appendChild(chip);
+                wrap.appendChild(lbl);
+                container.appendChild(wrap);
+            });
+        }
+
+        // --- Aggregation UI wiring ---
+        var aggColumnEl = document.getElementById('aggColumn');
+        var aggFuncEl = document.getElementById('aggFunc');
+        var aggFuncGroup = document.getElementById('aggFuncGroup');
+        var aggSection = document.getElementById('aggSection');
+
+        function populateAggColumn(columns) {
+            if (!aggColumnEl) return;
+            aggColumnEl.innerHTML = '<option value="">Count rows (default)</option>';
+            columns.forEach(function(c) {
+                var opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                aggColumnEl.appendChild(opt);
+            });
+        }
+
+        if (aggColumnEl) {
+            aggColumnEl.addEventListener('change', function() {
+                if (aggFuncGroup) aggFuncGroup.style.display = aggColumnEl.value ? 'block' : 'none';
+            });
+        }
+
+        // Show agg section when columns are loaded and a chart type is selected
+        function maybeShowAggSection() {
+            if (!aggSection) return;
+            var chartId = chartTypeEl.value;
+            // Only for single-variable chart types (not scatter/bubble)
+            var multiVar = ['scatter', 'bubble'];
+            aggSection.style.display = (chartId && multiVar.indexOf(chartId) === -1 && currentColumns.length) ? 'block' : 'none';
+        }
+
+        chartTypeEl.addEventListener('change', function() {
+            buildVariableInputs();
+            maybeShowAggSection();
+            autoSuggestTitle();
+        });
+
+        // --- Auto-suggest title ---
+        function autoSuggestTitle() {
+            var titleEl = document.getElementById('custTitle');
+            if (!titleEl || titleEl.value) return; // don't overwrite user input
+            var chartId = chartTypeEl.value;
+            var colPayload = getColumnsPayload();
+            var col = colPayload.column || colPayload.x_column || '';
+            if (!chartId || !col) return;
+            var chartName = '';
+            chartTypes.forEach(function(t) { if (t.id === chartId) chartName = t.name; });
+            if (chartName && col) titleEl.value = col + ' — ' + chartName;
+        }
+
+        // Trigger auto-title when column variable changes
+        var origBuildVariableInputs = buildVariableInputs;
+
+        // Patch variable selects to fire auto-title on change
+        var _origBuild = buildVariableInputs;
+        buildVariableInputs = function() {
+            _origBuild();
+            // after building, attach listeners for auto-title
+            if (variableInputsEl) {
+                variableInputsEl.querySelectorAll('select').forEach(function(sel) {
+                    sel.addEventListener('change', function() { autoSuggestTitle(); maybeShowAggSection(); populateAggColumn(currentColumns); });
+                });
+            }
+        };
+
+        // --- Dark mode wiring ---
+        var custDarkMode = document.getElementById('custDarkMode');
+        if (custDarkMode) {
+            custDarkMode.addEventListener('change', function() { applyCustomizationToChart(); });
+        }
+
+        // Extend getCustomization to include new fields
+        var _origGetCustomization = getCustomization;
+        getCustomization = function() {
+            var cust = _origGetCustomization();
+            cust.dark_mode = custDarkMode ? custDarkMode.checked : false;
+            cust.agg_column = aggColumnEl ? aggColumnEl.value : '';
+            cust.agg_func = aggFuncEl ? aggFuncEl.value : 'count';
+            return cust;
+        };
+
+        // Extend applyCustomizationToChartImmediate to handle dark mode toggle
+        var _origApplyImm = applyCustomizationToChartImmediate;
+        applyCustomizationToChartImmediate = function() {
+            _origApplyImm();
+            var dark = custDarkMode && custDarkMode.checked;
+            try {
+                Plotly.relayout('chartDiv', {
+                    paper_bgcolor: dark ? '#1a1a2e' : null,
+                    plot_bgcolor: dark ? '#16213e' : null,
+                    'font.color': dark ? '#e0e0e0' : null,
+                });
+            } catch(e) {}
+        };
+
+        // --- Python export ---
+        document.getElementById('btnExportPython').onclick = function() { doExport('python'); };
+
+        // =============================================
+        // DATA CONTROLS (filters, top N, sort, group by, date group)
+        // =============================================
+        var filterRowsEl = document.getElementById('filterRows');
+        var groupByColumnEl = document.getElementById('groupByColumn');
+        var dateGroupEl = document.getElementById('dateGroup');
+        var sortOrderEl = document.getElementById('sortOrder');
+        var topNEl = document.getElementById('topN');
+        var dataControlsSection = document.getElementById('dataControlsSection');
+
+        function populateGroupBy(columns) {
+            if (!groupByColumnEl) return;
+            var cur = groupByColumnEl.value;
+            groupByColumnEl.innerHTML = '<option value="">None</option>';
+            columns.forEach(function(c) {
+                var opt = document.createElement('option');
+                opt.value = c; opt.textContent = c;
+                groupByColumnEl.appendChild(opt);
+            });
+            if (cur) groupByColumnEl.value = cur;
+        }
+
+        function getFilters() {
+            var rows = filterRowsEl ? filterRowsEl.querySelectorAll('.filter-row') : [];
+            var filters = [];
+            rows.forEach(function(row) {
+                var col = row.querySelector('.fc').value;
+                var op = row.querySelector('.fo').value;
+                var val = row.querySelector('.fv').value.trim();
+                if (col && val !== '') filters.push({column: col, operator: op, value: val});
+            });
+            return filters;
+        }
+
+        function addFilterRow(col, op, val) {
+            if (!filterRowsEl) return;
+            var row = document.createElement('div');
+            row.className = 'filter-row';
+            // Column select
+            var colSel = document.createElement('select');
+            colSel.className = 'fc';
+            currentColumns.forEach(function(c) {
+                var o = document.createElement('option'); o.value = c; o.textContent = c;
+                colSel.appendChild(o);
+            });
+            if (col) colSel.value = col;
+            // Operator select
+            var opSel = document.createElement('select');
+            opSel.className = 'fo';
+            ['=','!=','>','>=','<','<=','contains','not contains'].forEach(function(o) {
+                var opt = document.createElement('option'); opt.value = o; opt.textContent = o;
+                opSel.appendChild(opt);
+            });
+            if (op) opSel.value = op;
+            // Value input
+            var valIn = document.createElement('input');
+            valIn.type = 'text'; valIn.className = 'fv'; valIn.placeholder = 'value';
+            if (val) valIn.value = val;
+            // Remove button
+            var rmBtn = document.createElement('button');
+            rmBtn.type = 'button'; rmBtn.className = 'btn-remove-filter'; rmBtn.textContent = '✕';
+            rmBtn.onclick = function() { row.remove(); };
+            row.appendChild(colSel); row.appendChild(opSel); row.appendChild(valIn); row.appendChild(rmBtn);
+            filterRowsEl.appendChild(row);
+        }
+
+        document.getElementById('btnAddFilter').addEventListener('click', function() { addFilterRow(); });
+
+        // =============================================
+        // REFERENCE LINES
+        // =============================================
+        var refLineRowsEl = document.getElementById('refLineRows');
+
+        function getRefLines() {
+            var rows = refLineRowsEl ? refLineRowsEl.querySelectorAll('.ref-line-row') : [];
+            var lines = [];
+            rows.forEach(function(row) {
+                var val = row.querySelector('.rl-val').value.trim();
+                var lbl = row.querySelector('.rl-lbl').value.trim();
+                var ori = row.querySelector('.rl-ori').value;
+                var col = row.querySelector('.rl-col').value;
+                if (val !== '') lines.push({value: parseFloat(val), label: lbl || ('Ref: ' + val), orientation: ori, color: col || '#e63946'});
+            });
+            return lines;
+        }
+
+        function addRefLineRow() {
+            if (!refLineRowsEl) return;
+            var row = document.createElement('div');
+            row.className = 'ref-line-row';
+            var valIn = document.createElement('input');
+            valIn.type = 'number'; valIn.className = 'rl-val cust-input'; valIn.placeholder = 'Value'; valIn.style.maxWidth = '90px';
+            var lblIn = document.createElement('input');
+            lblIn.type = 'text'; lblIn.className = 'rl-lbl cust-input'; lblIn.placeholder = 'Label'; lblIn.style.maxWidth = '120px';
+            var oriSel = document.createElement('select');
+            oriSel.className = 'rl-ori ctrl-select'; oriSel.style.maxWidth = '80px';
+            [['h','Horiz'],['v','Vert']].forEach(function(pair) {
+                var o = document.createElement('option'); o.value = pair[0]; o.textContent = pair[1];
+                oriSel.appendChild(o);
+            });
+            var colIn = document.createElement('input');
+            colIn.type = 'color'; colIn.className = 'rl-col cust-color'; colIn.value = '#e63946';
+            var rmBtn = document.createElement('button');
+            rmBtn.type = 'button'; rmBtn.className = 'btn-remove-filter'; rmBtn.textContent = '✕';
+            rmBtn.onclick = function() { row.remove(); };
+            row.appendChild(valIn); row.appendChild(lblIn); row.appendChild(oriSel); row.appendChild(colIn); row.appendChild(rmBtn);
+            refLineRowsEl.appendChild(row);
+        }
+
+        document.getElementById('btnAddRefLine').addEventListener('click', addRefLineRow);
+
+        // =============================================
+        // CHART HISTORY
+        // =============================================
+        var chartHistory = [];
+        var historySection = document.getElementById('historySection');
+        var historyGrid = document.getElementById('historyGrid');
+
+        function addToHistory(chartType, columnLabel) {
+            var el = document.getElementById('chartDiv');
+            if (!el || !el.querySelector('.plot-container')) return;
+            Plotly.toImage(el, {format: 'png', width: 300, height: 200}).then(function(dataUrl) {
+                chartHistory.unshift({img: dataUrl, label: columnLabel + ' / ' + chartType, config: buildShareConfig()});
+                if (chartHistory.length > 12) chartHistory.pop();
+                renderHistory();
+            }).catch(function(){});
+        }
+
+        function renderHistory() {
+            if (!historyGrid) return;
+            historyGrid.innerHTML = '';
+            chartHistory.forEach(function(item, idx) {
+                var thumb = document.createElement('div');
+                thumb.className = 'history-thumb';
+                thumb.title = item.label;
+                var img = document.createElement('img');
+                img.src = item.img; img.alt = item.label;
+                var lbl = document.createElement('div');
+                lbl.className = 'history-thumb-label'; lbl.textContent = item.label;
+                thumb.appendChild(img); thumb.appendChild(lbl);
+                thumb.addEventListener('click', function() { restoreFromConfig(item.config); });
+                historyGrid.appendChild(thumb);
+            });
+            if (historySection) historySection.style.display = chartHistory.length ? 'block' : 'none';
+        }
+
+        document.getElementById('btnClearHistory').addEventListener('click', function() {
+            chartHistory = []; renderHistory();
+        });
+
+        // =============================================
+        // SHARE URL
+        // =============================================
+        function buildShareConfig() {
+            return {
+                datasetId: datasetEl.value,
+                chartType: chartTypeEl.value,
+                columns: getColumnsPayload(),
+                agg_column: aggColumnEl ? aggColumnEl.value : '',
+                agg_func: aggFuncEl ? aggFuncEl.value : 'count',
+                group_by: groupByColumnEl ? groupByColumnEl.value : '',
+                sort_order: sortOrderEl ? sortOrderEl.value : 'desc',
+                top_n: topNEl ? topNEl.value : '',
+                date_group: dateGroupEl ? dateGroupEl.value : 'none',
+                filters: getFilters(),
+                title: document.getElementById('custTitle') ? document.getElementById('custTitle').value : ''
+            };
+        }
+
+        // Pending config to apply once columns have loaded
+        var pendingRestoreConfig = null;
+
+        function restoreFromConfig(cfg) {
+            if (!cfg) return;
+            pendingRestoreConfig = cfg;
+            if (cfg.datasetId && datasetEl.querySelector('option[value="' + cfg.datasetId + '"]')) {
+                if (datasetEl.value === cfg.datasetId && currentColumns.length) {
+                    // Columns already loaded — apply immediately
+                    _applyConfig(cfg);
+                } else {
+                    datasetEl.value = cfg.datasetId;
+                    datasetEl.dispatchEvent(new Event('change'));
+                    // _applyConfig will be called from buildVariableInputs once columns load
+                }
+            }
+        }
+
+        function _applyConfig(cfg) {
+            pendingRestoreConfig = null;
+            // Chart type
+            if (cfg.chartType) {
+                chartTypeEl.disabled = false;
+                fillChartTypeSelect();
+                if (chartTypeEl.querySelector('option[value="' + cfg.chartType + '"]')) {
+                    chartTypeEl.value = cfg.chartType;
+                    chartTypeEl.dispatchEvent(new Event('change'));
+                }
+            }
+            // Variable selects — may need a tick for buildVariableInputs to finish
+            setTimeout(function() {
+                if (cfg.columns) {
+                    Object.keys(cfg.columns).forEach(function(key) {
+                        var sel = variableInputsEl.querySelector('select[data-key="' + key + '"]');
+                        if (sel && sel.querySelector('option[value="' + cfg.columns[key] + '"]'))
+                            sel.value = cfg.columns[key];
+                    });
+                }
+                // Data controls
+                if (cfg.title && document.getElementById('custTitle')) document.getElementById('custTitle').value = cfg.title;
+                if (groupByColumnEl && cfg.group_by != null) groupByColumnEl.value = cfg.group_by;
+                if (sortOrderEl && cfg.sort_order) sortOrderEl.value = cfg.sort_order;
+                if (topNEl && cfg.top_n) topNEl.value = cfg.top_n;
+                if (dateGroupEl && cfg.date_group) dateGroupEl.value = cfg.date_group;
+                // Restore filters
+                if (cfg.filters && filterRowsEl) {
+                    filterRowsEl.innerHTML = '';
+                    cfg.filters.forEach(function(f) { addFilterRow(f.column, f.operator, f.value); });
+                }
+                updateGenerateButton();
+                // Auto-generate the chart
+                if (!btnGenerate.disabled) btnGenerate.click();
+            }, 50);
+        }
+
+        document.getElementById('btnShareUrl').addEventListener('click', function() {
+            var cfg = buildShareConfig();
+            var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+            var url = location.origin + location.pathname + '#cfg=' + encoded;
+            navigator.clipboard.writeText(url).then(function() {
+                setStatus('Share URL copied to clipboard!', 'success');
+            }).catch(function() {
+                prompt('Copy this URL:', url);
+            });
+        });
+
+        // Restore from URL hash on load
+        function restoreFromUrlHash() {
+            try {
+                var hash = location.hash;
+                if (!hash.startsWith('#cfg=')) return;
+                var encoded = hash.slice(5);
+                var cfg = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+                restoreFromConfig(cfg);
+            } catch(e) {}
+        }
+
+        // =============================================
+        // EMBED CODE
+        // =============================================
+        document.getElementById('btnEmbedCode').addEventListener('click', function() {
+            var embedHtml = '<iframe src="' + location.origin + '/api/charts/embed?config=' +
+                encodeURIComponent(JSON.stringify(buildShareConfig())) +
+                '" width="820" height="620" frameborder="0" allowfullscreen></iframe>';
+            document.getElementById('modalTitle').textContent = 'Embed code';
+            modalPre.textContent = embedHtml;
+            modalOverlay.classList.remove('hidden');
+        });
+
+        // =============================================
+        // SVG EXPORT
+        // =============================================
+        document.getElementById('btnExportSvg').onclick = function() {
+            var datasetId = datasetEl.value, chartType = chartTypeEl.value, columns = getColumnsPayload();
+            if (!datasetId || !chartType || !allRequiredVariablesSet()) return;
+            setStatus('Preparing SVG…', 'pending');
+            fetch(API + '/charts/export', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({chart_type: chartType, dataset_id: datasetId, columns: columns, customization: getCustomization(), format: 'svg'})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) throw new Error(data.error);
+                var blob = new Blob([data.content], {type: 'image/svg+xml'});
+                var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'chart.svg'; a.click();
+                URL.revokeObjectURL(a.href);
+                setStatus('Downloaded chart.svg', 'success');
+            })
+            .catch(function(e) { setStatus('SVG export failed: ' + e.message, 'error'); });
+        };
+
+        // =============================================
+        // COLUMN STATS
+        // =============================================
+        var showingStats = false;
+
+        document.getElementById('btnShowPreview').addEventListener('click', function() {
+            showingStats = false;
+            document.getElementById('dataPreviewTableWrap').style.display = 'block';
+            document.getElementById('dataStatsWrap').style.display = 'none';
+            this.style.borderColor = 'var(--primary)'; this.style.color = 'var(--primary)';
+            document.getElementById('btnShowStats').style.borderColor = ''; document.getElementById('btnShowStats').style.color = '';
+        });
+
+        document.getElementById('btnShowStats').addEventListener('click', function() {
+            showingStats = true;
+            document.getElementById('dataPreviewTableWrap').style.display = 'none';
+            document.getElementById('dataStatsWrap').style.display = 'block';
+            this.style.borderColor = 'var(--primary)'; this.style.color = 'var(--primary)';
+            document.getElementById('btnShowPreview').style.borderColor = ''; document.getElementById('btnShowPreview').style.color = '';
+            loadDataStats(datasetEl.value);
+        });
+
+        function loadDataStats(datasetId) {
+            var wrap = document.getElementById('dataStatsWrap');
+            if (!wrap || !datasetId) return;
+            wrap.innerHTML = '<span style="color:var(--text-muted);font-size:0.875rem;">Loading stats…</span>';
+            fetch(API + '/datasets/' + encodeURIComponent(datasetId) + '/stats')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.error) throw new Error(data.error);
+                    var table = document.createElement('table');
+                    table.className = 'stats-table';
+                    var thead = '<thead><tr><th>Column</th><th>Type</th><th>Unique</th><th>Nulls</th><th>Min</th><th>Max</th><th>Mean</th><th>Median</th></tr></thead>';
+                    table.innerHTML = thead;
+                    var tbody = document.createElement('tbody');
+                    Object.keys(data.stats).forEach(function(col) {
+                        var s = data.stats[col];
+                        var tr = document.createElement('tr');
+                        var nullBadge = s.null_pct > 0 ? '<span class="null-badge">' + s.null_pct + '%</span>' : '—';
+                        tr.innerHTML = '<td><strong>' + col + '</strong></td>' +
+                            '<td>' + (s.type || '') + '</td>' +
+                            '<td class="numeric">' + s.unique + '</td>' +
+                            '<td>' + nullBadge + '</td>' +
+                            '<td class="numeric">' + (s.min != null ? s.min : '—') + '</td>' +
+                            '<td class="numeric">' + (s.max != null ? s.max : '—') + '</td>' +
+                            '<td class="numeric">' + (s.mean != null ? s.mean : '—') + '</td>' +
+                            '<td class="numeric">' + (s.median != null ? s.median : '—') + '</td>';
+                        tbody.appendChild(tr);
+                    });
+                    table.appendChild(tbody);
+                    wrap.innerHTML = '';
+                    wrap.appendChild(table);
+                })
+                .catch(function(e) { wrap.innerHTML = '<span style="color:#991b1b;font-size:0.875rem;">Error: ' + e.message + '</span>'; });
+        }
+
+        // =============================================
+        // KEYBOARD SHORTCUT: Ctrl+Enter to generate
+        // =============================================
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                if (!btnGenerate.disabled) btnGenerate.click();
+            }
+            if (e.key === 'Escape') {
+                if (!modalOverlay.classList.contains('hidden')) modalOverlay.classList.add('hidden');
+            }
+        });
+
+        // =============================================
+        // EXTEND getCustomization FOR NEW FIELDS
+        // =============================================
+        var _origGetCust2 = getCustomization;
+        getCustomization = function() {
+            var cust = _origGetCust2();
+            cust.group_by = groupByColumnEl ? groupByColumnEl.value : '';
+            cust.date_group = dateGroupEl ? dateGroupEl.value : 'none';
+            cust.sort_order = sortOrderEl ? sortOrderEl.value : 'desc';
+            cust.top_n = topNEl ? topNEl.value : '';
+            cust.filters = getFilters();
+            cust.reference_lines = getRefLines();
+            cust.show_trendline = document.getElementById('custShowTrendline') ? document.getElementById('custShowTrendline').checked : false;
+            cust.show_data_labels = document.getElementById('custShowDataLabels') ? document.getElementById('custShowDataLabels').checked : true;
+            return cust;
+        };
+
+        // Wire trendline + data labels to re-generate
+        ['custShowTrendline', 'custShowDataLabels'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.addEventListener('change', function() {
+                if (!btnGenerate.disabled) btnGenerate.click();
+            });
+        });
+
+        // Show data controls when dataset + chart type are selected
+        function maybeShowDataControls() {
+            if (!dataControlsSection) return;
+            dataControlsSection.style.display = (datasetEl.value && chartTypeEl.value) ? 'block' : 'none';
+            populateGroupBy(currentColumns);
+        }
+
+        // Hook into chart generated to add to history
+        var _origBtnGenerate = btnGenerate.onclick;
+        btnGenerate.addEventListener('click', function() {
+            var col = getColumnsPayload();
+            var colLabel = col.column || col.x_column || '';
+            setTimeout(function() {
+                addToHistory(chartTypeEl.value, colLabel);
+                maybeShowDataControls();
+            }, 1500);
+        });
+
+        // Also show data controls when chart type changes
+        var _prevChartTypeChange = chartTypeEl.onchange;
+        chartTypeEl.addEventListener('change', function() { maybeShowDataControls(); });
+
+        // Also show when dataset changes
+        datasetEl.addEventListener('change', function() { maybeShowDataControls(); populateGroupBy(currentColumns); });
+
+        // Also populate groupBy when columns load (patch buildVariableInputs again)
+        var _bvi3 = buildVariableInputs;
+        buildVariableInputs = (function(prev) {
+            return function() {
+                prev();
+                populateGroupBy(currentColumns);
+                maybeShowDataControls();
+                // If a history restore is pending and columns are now loaded, apply it
+                if (pendingRestoreConfig && currentColumns.length) {
+                    var cfg = pendingRestoreConfig;
+                    _applyConfig(cfg);
+                }
+            };
+        })(buildVariableInputs);
+
+        // Also populate aggColumn uses currentColumns which updates via buildVariableInputs
+
+        // Also restore from URL hash after load
+
+        // Also populate group by if we have columns already
+        if (currentColumns.length) populateGroupBy(currentColumns);
+
+        // Also populate agg column when columns are loaded
+        var _origLoadColumns = loadColumns;
+        loadColumns = function(datasetId) {
+            _origLoadColumns(datasetId);
+        };
+
+        var _origLoadColumnsInner = loadColumns;
+        // Patch loadDatasets to also populate agg column after columns load
+        var _origBuildVarInputs2 = buildVariableInputs;
+        buildVariableInputs = (function(prev) {
+            return function() {
+                prev();
+                populateAggColumn(currentColumns);
+                maybeShowAggSection();
+            };
+        })(buildVariableInputs);
+
+        // Bind extra customize panel elements
+        var _origBindCustomize = bindCustomizePanel;
+        bindCustomizePanel = function() {
+            _origBindCustomize();
+            buildPaletteChips();
+            if (custDarkMode) custDarkMode.addEventListener('change', applyCustomizationToChart);
+        };
+
+        window.onload = function() {
+            bindCustomizePanel();
+            loadChartTypes().then(loadDatasets).then(function() {
+                restoreFromUrlHash();
+            });
+        };
+
+        /* ── Report Builder ──────────────────────────────────── */
+        var reportItems = [];
+        var reportIdCounter = 0;
+        var pendingReportImage = null; // base64 png captured when modal opens
+
+        var reportModal = document.getElementById('reportModal');
+        var reportSection = document.getElementById('reportSection');
+        var reportBadge = document.getElementById('reportBadge');
+        var reportItemsContainer = document.getElementById('reportItemsContainer');
+
+        function openReportModal() {
+            // Capture current chart as PNG, then open modal
+            var plotDiv = document.getElementById('chartDiv');
+            if (!plotDiv || !plotDiv.data) {
+                alert('No chart to add. Generate a chart first.');
+                return;
+            }
+            var custTitle = document.getElementById('custTitle');
+            document.getElementById('reportChartTitle').value = (custTitle && custTitle.value) ? custTitle.value : (document.getElementById('chartType').options[document.getElementById('chartType').selectedIndex].text.split(' —')[0] || 'Chart');
+            document.getElementById('reportParagraph').value = '';
+            document.getElementById('reportParaPosition').value = 'below';
+
+            Plotly.toImage(plotDiv, { format: 'png', width: 900, height: 500 })
+                .then(function(imgData) {
+                    pendingReportImage = imgData;
+                    reportModal.classList.remove('hidden');
+                })
+                .catch(function() {
+                    pendingReportImage = null;
+                    reportModal.classList.remove('hidden');
+                });
+        }
+
+        function closeReportModal() {
+            reportModal.classList.add('hidden');
+            pendingReportImage = null;
+        }
+
+        function confirmAddToReport() {
+            var title = document.getElementById('reportChartTitle').value.trim() || 'Chart';
+            var para = document.getElementById('reportParagraph').value.trim();
+            var pos = document.getElementById('reportParaPosition').value;
+            var item = {
+                id: ++reportIdCounter,
+                title: title,
+                paragraph: para,
+                paraPosition: pos,
+                image: pendingReportImage,
+                chartTypeName: (document.getElementById('chartType').options[document.getElementById('chartType').selectedIndex] || {}).text || '',
+                datasetName: (document.getElementById('dataset').options[document.getElementById('dataset').selectedIndex] || {}).text || ''
+            };
+            reportItems.push(item);
+            renderReport();
+            closeReportModal();
+            reportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setStatus('Chart added to report. ' + reportItems.length + ' item(s) in report.', 'success');
+        }
+
+        function removeReportItem(id) {
+            reportItems = reportItems.filter(function(it) { return it.id !== id; });
+            renderReport();
+        }
+
+        function moveReportItem(id, dir) {
+            var idx = reportItems.findIndex(function(it) { return it.id === id; });
+            if (idx < 0) return;
+            var newIdx = idx + dir;
+            if (newIdx < 0 || newIdx >= reportItems.length) return;
+            var tmp = reportItems[idx];
+            reportItems[idx] = reportItems[newIdx];
+            reportItems[newIdx] = tmp;
+            renderReport();
+        }
+
+        function editReportParagraph(id) {
+            var item = reportItems.find(function(it) { return it.id === id; });
+            if (!item) return;
+            var paraEl = document.getElementById('report-para-' + id);
+            if (!paraEl) return;
+            if (paraEl.tagName === 'P') {
+                // Switch to textarea
+                var ta = document.createElement('textarea');
+                ta.className = 'report-item-para-edit';
+                ta.id = 'report-para-' + id;
+                ta.value = item.paragraph;
+                ta.placeholder = 'Write a description for this chart…';
+                paraEl.parentNode.replaceChild(ta, paraEl);
+                ta.focus();
+                var btn = document.getElementById('report-edit-btn-' + id);
+                if (btn) btn.textContent = 'Save';
+            } else {
+                // Save textarea back
+                item.paragraph = paraEl.value.trim();
+                renderReport();
+            }
+        }
+
+        function renderReport() {
+            reportBadge.textContent = reportItems.length;
+            if (reportItems.length === 0) {
+                reportSection.style.display = 'none';
+                return;
+            }
+            reportSection.style.display = 'block';
+            reportItemsContainer.innerHTML = '';
+            reportItems.forEach(function(item, idx) {
+                var div = document.createElement('div');
+                div.className = 'report-item';
+
+                // Toolbar
+                var toolbar = document.createElement('div');
+                toolbar.className = 'report-item-toolbar';
+                toolbar.innerHTML =
+                    '<span class="report-item-num">Chart ' + (idx + 1) + ' of ' + reportItems.length + '</span>' +
+                    '<div class="report-item-controls">' +
+                        (idx > 0 ? '<button class="btn-report-ctrl" title="Move up" onclick="moveReportItem(' + item.id + ',-1)">↑</button>' : '') +
+                        (idx < reportItems.length - 1 ? '<button class="btn-report-ctrl" title="Move down" onclick="moveReportItem(' + item.id + ',1)">↓</button>' : '') +
+                        '<button class="btn-report-ctrl" id="report-edit-btn-' + item.id + '" onclick="editReportParagraph(' + item.id + ')">Edit text</button>' +
+                        '<button class="btn-report-ctrl danger" title="Remove" onclick="removeReportItem(' + item.id + ')">Remove</button>' +
+                    '</div>';
+                div.appendChild(toolbar);
+
+                // Body
+                var body = document.createElement('div');
+                body.className = 'report-item-body';
+
+                var titleEl = document.createElement('h3');
+                titleEl.className = 'report-item-title';
+                titleEl.textContent = item.title;
+                body.appendChild(titleEl);
+
+                function makeParaEl() {
+                    var p = document.createElement('p');
+                    p.className = 'report-item-para';
+                    p.id = 'report-para-' + item.id;
+                    p.textContent = item.paragraph || '';
+                    if (!item.paragraph) p.style.display = 'none';
+                    return p;
+                }
+
+                function makeImgEl() {
+                    if (!item.image) return null;
+                    var wrap = document.createElement('div');
+                    wrap.className = 'report-item-img-wrap';
+                    var img = document.createElement('img');
+                    img.className = 'report-item-img';
+                    img.src = item.image;
+                    img.alt = item.title;
+                    wrap.appendChild(img);
+                    return wrap;
+                }
+
+                if (item.paraPosition === 'above') {
+                    body.appendChild(makeParaEl());
+                    var imgEl = makeImgEl();
+                    if (imgEl) body.appendChild(imgEl);
+                } else {
+                    var imgEl2 = makeImgEl();
+                    if (imgEl2) body.appendChild(imgEl2);
+                    body.appendChild(makeParaEl());
+                }
+
+                div.appendChild(body);
+                reportItemsContainer.appendChild(div);
+            });
+        }
+
+        function exportReportAsHTML() {
+            var title = document.getElementById('reportTitle').value.trim() || 'Report';
+            var html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>' + title + '</title>';
+            html += '<style>body{font-family:system-ui,sans-serif;max-width:900px;margin:2rem auto;padding:0 1.5rem;color:#1a1a1a;line-height:1.6}';
+            html += 'h1{font-size:2rem;margin-bottom:2rem;border-bottom:3px solid #0d5c4a;padding-bottom:.75rem;color:#0d5c4a}';
+            html += '.chart-item{margin-bottom:2.5rem;page-break-inside:avoid}';
+            html += '.chart-item h2{font-size:1.25rem;margin-bottom:.75rem}';
+            html += '.chart-item p{font-size:1rem;color:#333;margin:.75rem 0;white-space:pre-wrap}';
+            html += '.chart-item img{width:100%;border-radius:8px;border:1px solid #e0e0e0}';
+            html += '</style></head><body>';
+            html += '<h1>' + escapeHtml(title) + '</h1>';
+            reportItems.forEach(function(item, idx) {
+                html += '<div class="chart-item">';
+                html += '<h2>' + escapeHtml(item.title) + '</h2>';
+                if (item.paraPosition === 'above' && item.paragraph) html += '<p>' + escapeHtml(item.paragraph) + '</p>';
+                if (item.image) html += '<img src="' + item.image + '" alt="' + escapeHtml(item.title) + '">';
+                if (item.paraPosition === 'below' && item.paragraph) html += '<p>' + escapeHtml(item.paragraph) + '</p>';
+                html += '</div>';
+            });
+            html += '</body></html>';
+            var blob = new Blob([html], { type: 'text/html' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = (title || 'report').replace(/\s+/g, '_') + '.html';
+            a.click();
+        }
+
+        function escapeHtml(str) {
+            return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // Wire up modal buttons
+        document.getElementById('btnAddToReport').addEventListener('click', openReportModal);
+        document.getElementById('reportModalClose').addEventListener('click', closeReportModal);
+        document.getElementById('reportModalClose2').addEventListener('click', closeReportModal);
+        document.getElementById('btnConfirmAddToReport').addEventListener('click', confirmAddToReport);
+        document.getElementById('btnExportReportHtml').addEventListener('click', exportReportAsHTML);
+        document.getElementById('btnPrintReport').addEventListener('click', function() { window.print(); });
+        document.getElementById('btnClearReport').addEventListener('click', function() {
+            if (reportItems.length && confirm('Clear all ' + reportItems.length + ' chart(s) from the report?')) {
+                reportItems = [];
+                renderReport();
+            }
+        });
+        reportModal.addEventListener('click', function(e) {
+            if (e.target === reportModal) closeReportModal();
+        });
+    </script>
+</body>
+</html>

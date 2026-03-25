@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px 0; background: #008571; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #1E5050; }
+        #status { margin-top: 20px; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Simple Upload Test</h1>
+    <input type="file" id="testFile" accept=".csv,.xlsx,.xls">
+    <br>
+    <button onclick="testUpload()">Test Upload</button>
+    <div id="status"></div>
+
+    <script>
+        async function testUpload() {
+            const fileInput = document.getElementById('testFile');
+            const statusDiv = document.getElementById('status');
+            
+            if (!fileInput.files[0]) {
+                statusDiv.className = 'error';
+                statusDiv.textContent = 'Please select a file first';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            statusDiv.className = '';
+            statusDiv.textContent = `Uploading ${file.name}...`;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                console.log('Sending to: http://localhost:5000/api/datasets/upload');
+                console.log('File:', file.name, file.size, 'bytes');
+                
+                const response = await fetch('http://localhost:5000/api/datasets/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDiv.className = 'success';
+                    statusDiv.textContent = `✅ Success! Uploaded: ${data.name}, Rows: ${data.row_count}, Columns: ${data.columns.length}`;
+                    console.log('Success:', data);
+                } else {
+                    const error = await response.json();
+                    statusDiv.className = 'error';
+                    statusDiv.textContent = `❌ Error: ${error.error || 'Unknown error'}`;
+                    console.error('Error:', error);
+                }
+            } catch (error) {
+                statusDiv.className = 'error';
+                statusDiv.textContent = `❌ Network Error: ${error.message}`;
+                console.error('Exception:', error);
+            }
+        }
+    </script>
+</body>
+</html>
